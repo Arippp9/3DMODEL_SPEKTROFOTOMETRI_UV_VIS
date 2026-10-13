@@ -108,18 +108,20 @@ def hitung_konsentrasi(A, epsilon, b):
 # =========================
 # MODEL 3D SPEKTROFOTOMETER
 # =========================
-MODEL_3D = r"""
+# Konfigurasi halaman
 st.set_page_config(
     page_title="UV-1700 PharmaSpec 3D",
     page_icon="🔬",
     layout="wide"
 )
 
+# Desain tampilan Streamlit
 st.markdown("""
 <style>
 .stApp {
     background: #faf9f5;
 }
+
 .block-container {
     max-width: 1100px;
     padding-top: 1.5rem;
@@ -127,40 +129,51 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Judul halaman
 st.title("🔬 Shimadzu UV-1700 PharmaSpec")
+
 st.caption(
     "Model 3D interaktif spektrofotometer UV-Vis. "
     "Putar model, amati bagian luar dan dalam, "
     "serta pelajari fungsi komponen."
 )
 
+# Lokasi file desain 3D HTML
 html_path = Path(__file__).parent / "UV-1700 PharmaSpec 3D.html"
 
+# Memuat desain 3D
 if html_path.exists():
-    html_code = html_path.read_text(encoding="utf-8")
-    components.html(
-        html_code,
-        height=760,
-        scrolling=True
-    )
+    try:
+        html_code = html_path.read_text(encoding="utf-8")
+
+        components.html(
+            html_code,
+            height=760,
+            scrolling=True
+        )
+
+    except Exception as e:
+        st.error(f"Gagal membaca file HTML: {e}")
+
 else:
     st.error(
-        "File uv1700.html tidak ditemukan. "
-        "Pastikan file tersebut berada satu folder "
-        "dengan streamlit_app.py di GitHub."
+        "File desain 3D tidak ditemukan. "
+        "Pastikan file bernama "
+        "'UV-1700 PharmaSpec 3D.html' "
+        "berada satu folder dengan streamlit_app.py."
     )
 
+# Garis pemisah
 st.divider()
 
+# Footer
 st.markdown("""
 <div style="text-align:center;color:#777;padding:12px">
-<b>UV-Vis Explorer</b><br>
-Laboratorium Virtual Spektrofotometri UV-Vis<br>
-Media pembelajaran dan simulasi instrumen
+    <b>UV-Vis Explorer</b><br>
+    Laboratorium Virtual Spektrofotometri UV-Vis<br>
+    Media pembelajaran dan simulasi instrumen
 </div>
 """, unsafe_allow_html=True)
-"""
-
 
 # =========================
 # NAVIGASI
