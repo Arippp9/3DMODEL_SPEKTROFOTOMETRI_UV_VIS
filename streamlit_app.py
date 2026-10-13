@@ -16,35 +16,113 @@ st.set_page_config(
 )
 
 # ==========================================
-# DESAIN TAMPILAN
+# DESAIN DAN WARNA TEKS
 # ==========================================
 st.markdown("""
 <style>
+/* Latar belakang */
 .stApp {
-    background: #faf9f5;
+    background-color: #faf9f5;
+    color: #111111;
 }
 
+/* Area utama */
 .block-container {
     max-width: 1200px;
     padding-top: 1.5rem;
     padding-bottom: 2rem;
 }
 
-h1, h2, h3 {
-    color: #263746;
+/* Semua teks utama */
+.stApp,
+.stApp p,
+.stApp span,
+.stApp label,
+.stApp li,
+.stApp small,
+.stMarkdown,
+.stMarkdown p,
+.stMarkdown li,
+.stCaption,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li {
+    color: #111111;
 }
 
+/* Judul */
+h1, h2, h3, h4, h5, h6 {
+    color: #111111 !important;
+}
+
+/* Tab navigasi */
+.stTabs [data-baseweb="tab"] {
+    color: #111111 !important;
+}
+
+.stTabs [aria-selected="true"] {
+    color: #111111 !important;
+}
+
+/* Label dan input */
+.stTextInput label,
+.stNumberInput label,
+.stSelectbox label,
+.stRadio label,
+.stSlider label,
+.stMultiSelect label {
+    color: #111111 !important;
+}
+
+/* Nilai input */
+.stNumberInput input,
+.stTextInput input,
+.stTextArea textarea {
+    color: #111111 !important;
+    background-color: #ffffff !important;
+}
+
+/* Pilihan dropdown */
+[data-baseweb="select"] * {
+    color: #111111 !important;
+}
+
+/* Tabel */
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    color: #111111;
+}
+
+/* Kotak metrik */
 div[data-testid="stMetric"] {
-    background: #ffffff;
+    background-color: #ffffff;
     border: 1px solid #e6e1d8;
     padding: 15px;
     border-radius: 10px;
 }
 
-div[data-testid="stTabs"] button {
-    font-weight: 600;
+[data-testid="stMetricLabel"],
+[data-testid="stMetricValue"],
+[data-testid="stMetricDelta"] {
+    color: #111111 !important;
 }
 
+/* Tombol */
+.stButton button {
+    color: #111111 !important;
+    border: 1px solid #b8b2a8;
+}
+
+/* Caption */
+.stCaption,
+[data-testid="stCaptionContainer"] {
+    color: #333333 !important;
+}
+
+/* Garis pemisah */
+hr {
+    border-color: #d8d3ca;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -147,8 +225,8 @@ with tab2:
     st.latex(r"A=-\log_{10}(T)")
 
     st.write(
-        "Pada persamaan tersebut, T merupakan transmitansi "
-        "dalam bentuk pecahan, bukan persen."
+        "T merupakan transmitansi dalam bentuk pecahan, "
+        "bukan persen."
     )
 
     st.divider()
@@ -196,7 +274,7 @@ with tab2:
     st.write("""
     Kurva kalibrasi dibuat dengan mengukur absorbansi
     beberapa larutan standar yang konsentrasinya diketahui.
-    Hubungan konsentrasi dan absorbansi dapat dianalisis
+    Hubungan konsentrasi dan absorbansi dianalisis
     menggunakan regresi linear untuk memperoleh persamaan
     garis dan menentukan konsentrasi sampel.
     """)
@@ -217,11 +295,10 @@ with tab3:
 
     st.write("""
     Jelajahi model 3D instrumen spektrofotometer UV-Vis.
-    Gunakan kontrol yang tersedia pada model untuk memutar
-    tampilan dan mengamati bagian-bagian instrumen.
+    Gunakan kontrol yang tersedia untuk memutar tampilan
+    dan mengamati bagian-bagian instrumen.
     """)
 
-    # Nama file HTML harus sama persis dengan file di GitHub
     html_path = (
         Path(__file__).parent
         / "UV-1700 PharmaSpec 3D.html"
@@ -249,16 +326,10 @@ with tab3:
             "berada satu folder dengan streamlit_app.py."
         )
 
-        st.info("""
-        Periksa nama file di GitHub. Pastikan nama file,
-        spasi, dan huruf besar-kecilnya sesuai dengan
-        nama yang digunakan dalam kode.
-        """)
-
     st.caption(
         "Catatan: model merupakan media pembelajaran. "
-        "Susunan komponen pada ilustrasi 3D tidak selalu "
-        "mewakili susunan internal instrumen yang sebenarnya."
+        "Susunan komponen ilustrasi tidak selalu mewakili "
+        "susunan internal instrumen yang sebenarnya."
     )
 
 # ==========================================
@@ -274,7 +345,7 @@ with tab4:
     ])
 
     # --------------------------------------
-    # 4A. ABSORBANSI DAN TRANSMITANSI
+    # ABSORBANSI DAN TRANSMITANSI
     # --------------------------------------
     with subtab1:
         st.subheader("Konversi Absorbansi dan Transmitansi")
@@ -321,22 +392,20 @@ with tab4:
             )
 
             if st.button("Hitung Transmitansi"):
-                transmitansi_hasil = (
-                    10 ** (-absorbansi_input)
-                ) * 100
+                hasil_T = 10 ** (-absorbansi_input) * 100
 
                 st.metric(
                     "Transmitansi (%T)",
-                    f"{transmitansi_hasil:.6f}%"
+                    f"{hasil_T:.6f}%"
                 )
 
                 st.code(
                     f"%T = 10^(-{absorbansi_input}) × 100\n"
-                    f"%T = {transmitansi_hasil:.6f}%"
+                    f"%T = {hasil_T:.6f}%"
                 )
 
     # --------------------------------------
-    # 4B. HUKUM LAMBERT-BEER
+    # LAMBERT-BEER
     # --------------------------------------
     with subtab2:
         st.subheader("Perhitungan Hukum Lambert-Beer")
@@ -388,10 +457,7 @@ with tab4:
             if pilihan == "Konsentrasi (c)":
                 hasil = A_input / (epsilon_input * b_input)
 
-                st.metric(
-                    "Konsentrasi (c)",
-                    f"{hasil:.8g}"
-                )
+                st.metric("Konsentrasi (c)", f"{hasil:.8g}")
 
                 st.code(
                     f"c = A / (ε × b)\n"
@@ -403,10 +469,7 @@ with tab4:
             elif pilihan == "Absorbansi (A)":
                 hasil = epsilon_input * b_input * c_input
 
-                st.metric(
-                    "Absorbansi (A)",
-                    f"{hasil:.8g}"
-                )
+                st.metric("Absorbansi (A)", f"{hasil:.8g}")
 
                 st.code(
                     f"A = ε × b × c\n"
@@ -416,14 +479,13 @@ with tab4:
                 )
 
             else:
-                if b_input * c_input == 0:
+                hasil = A_input / (b_input * c_input) if c_input > 0 else None
+
+                if hasil is None:
                     st.error(
-                        "Panjang lintasan optik dan konsentrasi "
-                        "tidak boleh menghasilkan penyebut nol."
+                        "Konsentrasi harus lebih besar dari nol."
                     )
                 else:
-                    hasil = A_input / (b_input * c_input)
-
                     st.metric(
                         "Absorptivitas molar (ε)",
                         f"{hasil:.8g}"
@@ -437,20 +499,18 @@ with tab4:
                     )
 
         st.info(
-            "Pastikan satuan ε, b, dan c konsisten "
-            "dengan sistem satuan yang digunakan."
+            "Pastikan satuan ε, b, dan c konsisten."
         )
 
     # --------------------------------------
-    # 4C. KURVA KALIBRASI DAN REGRESI LINEAR
+    # KURVA KALIBRASI
     # --------------------------------------
     with subtab3:
         st.subheader("Regresi Linear Kurva Kalibrasi")
 
-        st.write("""
-        Masukkan data konsentrasi larutan standar dan
-        absorbansinya. Kamu bisa mengedit tabel secara langsung.
-        """)
+        st.write(
+            "Masukkan data konsentrasi standar dan absorbansinya."
+        )
 
         data_awal = pd.DataFrame({
             "Konsentrasi": [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -471,16 +531,13 @@ with tab4:
 
             if len(data_bersih) < 2:
                 st.error(
-                    "Masukkan minimal dua pasangan data "
-                    "konsentrasi dan absorbansi."
+                    "Masukkan minimal dua pasangan data."
                 )
 
-            elif (
-                data_bersih["Konsentrasi"].nunique() < 2
-            ):
+            elif data_bersih["Konsentrasi"].nunique() < 2:
                 st.error(
-                    "Nilai konsentrasi harus memiliki "
-                    "minimal dua nilai yang berbeda."
+                    "Konsentrasi harus memiliki minimal "
+                    "dua nilai berbeda."
                 )
 
             else:
@@ -496,22 +553,14 @@ with tab4:
                     np.isfinite(x).all()
                     and np.isfinite(y).all()
                 ):
-                    st.error(
-                        "Data harus berupa angka yang valid."
-                    )
+                    st.error("Data harus berupa angka yang valid.")
 
                 else:
                     slope, intercept = np.polyfit(x, y, 1)
-
                     y_prediksi = slope * x + intercept
 
-                    ss_res = np.sum(
-                        (y - y_prediksi) ** 2
-                    )
-
-                    ss_tot = np.sum(
-                        (y - np.mean(y)) ** 2
-                    )
+                    ss_res = np.sum((y - y_prediksi) ** 2)
+                    ss_tot = np.sum((y - np.mean(y)) ** 2)
 
                     if ss_tot == 0:
                         r_squared = float("nan")
@@ -521,40 +570,22 @@ with tab4:
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        st.metric(
-                            "Slope (a)",
-                            f"{slope:.6f}"
-                        )
+                        st.metric("Slope (a)", f"{slope:.6f}")
 
                     with col2:
-                        st.metric(
-                            "Intersep (b)",
-                            f"{intercept:.6f}"
-                        )
+                        st.metric("Intersep (b)", f"{intercept:.6f}")
 
                     with col3:
-                        st.metric(
-                            "R²",
-                            f"{r_squared:.6f}"
-                        )
+                        st.metric("R²", f"{r_squared:.6f}")
 
                     st.markdown("### Persamaan Regresi")
 
                     st.code(
-                        f"y = {slope:.6f}x "
-                        f"+ ({intercept:.6f})"
-                    )
-
-                    st.write(
-                        "Koefisien determinasi (R²): "
-                        f"{r_squared:.6f}"
+                        f"y = {slope:.6f}x + ({intercept:.6f})"
                     )
 
                     hasil_tabel = data_bersih.copy()
-
-                    hasil_tabel[
-                        "Absorbansi Prediksi"
-                    ] = y_prediksi
+                    hasil_tabel["Absorbansi Prediksi"] = y_prediksi
 
                     st.markdown("### Hasil Perhitungan")
 
@@ -563,13 +594,11 @@ with tab4:
                         use_container_width=True
                     )
 
-                    st.caption("""
-                    R² menunjukkan seberapa baik data
-                    mengikuti model linear. Nilai R² yang
-                    tinggi saja tidak cukup untuk memastikan
-                    bahwa seluruh persyaratan validasi metode
-                    telah terpenuhi.
-                    """)
+                    st.caption(
+                        "R² menunjukkan kesesuaian data terhadap "
+                        "model linear, tetapi bukan satu-satunya "
+                        "parameter untuk menilai validitas metode."
+                    )
 
 # ==========================================
 # FOOTER
@@ -579,7 +608,7 @@ st.divider()
 st.markdown("""
 <div style="
     text-align: center;
-    color: #777;
+    color: #333333;
     padding: 12px;
 ">
     <b>UV-Vis Explorer</b><br>
