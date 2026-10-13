@@ -109,6 +109,8 @@ def hitung_konsentrasi(A, epsilon, b):
 # MODEL 3D SPEKTROFOTOMETER
 # =========================
 # Konfigurasi halaman
+elif halaman == "Model 3D":
+
 st.set_page_config(
     page_title="UV-1700 PharmaSpec 3D",
     page_icon="🔬",
