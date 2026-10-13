@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 import numpy as np
 import pandas as pd
 import math
+from pathlib import Path
 
 st.set_page_config(
     page_title="UV-Vis Explorer",
@@ -42,7 +43,7 @@ st.markdown("""
     line-height: 1.7;
 }
 .card {
-    background: white;
+    background: red;
     border: 1px solid #dbe4ef;
     padding: 22px;
     border-radius: 18px;
@@ -108,297 +109,56 @@ def hitung_konsentrasi(A, epsilon, b):
 # MODEL 3D SPEKTROFOTOMETER
 # =========================
 MODEL_3D = r"""
-<div id="uvvis" style="height:590px;width:100%;position:relative;background:#eaf2fb;border-radius:18px;overflow:hidden;font-family:Arial">
-<div style="position:absolute;z-index:2;top:10px;left:10px;background:white;padding:9px;border-radius:8px;color:#0a1f44">
-Model 3D UV-Vis
-</div>
-<div style="position:absolute;z-index:2;top:10px;right:10px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:70%">
-<button onclick="toggleRotation()" id="rotationButton">⟳ Putar otomatis</button>
-<button onclick="toggleLid()">Buka/tutup kuvet</button>
-<button onclick="toggleBeam()" id="beamButton">Jalur cahaya</button>
-<button onclick="resetModel()">Reset</button>
-</div>
-<div style="position:absolute;z-index:2;bottom:10px;left:10px;max-width:290px;background:#ffffffed;border-radius:10px;padding:12px;color:#0a1f44">
-<b id="partTitle">Pilih komponen</b>
-<div id="partInfo" style="font-size:13px;line-height:1.5;margin-top:5px">Seret model untuk memutar. Gunakan scroll untuk zoom dan klik komponen untuk mengetahui fungsinya.</div>
-</div>
-</div>
+st.set_page_config(
+    page_title="UV-1700 PharmaSpec 3D",
+    page_icon="🔬",
+    layout="wide"
+)
 
+st.markdown("""
 <style>
-#uvvis button {
-background:white;border:1px solid #cbd5e1;border-radius:8px;
-padding:8px;color:#0a1f44;cursor:pointer;font-size:12px
+.stApp {
+    background: #faf9f5;
 }
-#uvvis button:hover {background:#cffafe}
+.block-container {
+    max-width: 1100px;
+    padding-top: 1.5rem;
+}
 </style>
+""", unsafe_allow_html=True)
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-(function(){
-const root=document.getElementById('uvvis');
-if(!window.THREE){
-root.innerHTML='Model 3D tidak dapat dimuat. Periksa koneksi internet.';
-return;
-}
+st.title("🔬 Shimadzu UV-1700 PharmaSpec")
+st.caption(
+    "Model 3D interaktif spektrofotometer UV-Vis. "
+    "Putar model, amati bagian luar dan dalam, "
+    "serta pelajari fungsi komponen."
+)
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color('#eaf2fb');
+html_path = Path(__file__).parent / "UV-1700 PharmaSpec 3D.html"
 
-const camera=new THREE.PerspectiveCamera(
-45,root.clientWidth/root.clientHeight,.1,100
-);
-let theta=.7,phi=1.0,radius=9,auto=false,lidOpen=false,beamOn=false;
+if html_path.exists():
+    html_code = html_path.read_text(encoding="utf-8")
+    components.html(
+        html_code,
+        height=760,
+        scrolling=True
+    )
+else:
+    st.error(
+        "File uv1700.html tidak ditemukan. "
+        "Pastikan file tersebut berada satu folder "
+        "dengan streamlit_app.py di GitHub."
+    )
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-renderer.setSize(root.clientWidth,root.clientHeight);
-renderer.domElement.style.width='100%';
-renderer.domElement.style.height='100%';
-root.insertBefore(renderer.domElement,root.children[0]);
+st.divider()
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x718096,2));
-
-const light=new THREE.DirectionalLight(0xffffff,2);
-light.position.set(5,8,6);
-scene.add(light);
-
-const floor=new THREE.Mesh(
-new THREE.PlaneGeometry(100,100),
-new THREE.MeshStandardMaterial({color:'#dce7f3'})
-);
-floor.rotation.x=-Math.PI/2;
-floor.position.y=-.04;
-scene.add(floor);
-
-const grid=new THREE.GridHelper(
-20,40,0xa9bed5,0xd0dce9
-);
-grid.position.y=-.02;
-scene.add(grid);
-
-const machine=new THREE.Group();
-scene.add(machine);
-const clickable=[];
-
-function mat(color,transparent=false,opacity=1){
-return new THREE.MeshStandardMaterial({
-color,roughness:.4,metalness:.12,transparent,opacity
-});
-}
-
-function box(name,pos,size,color,description){
-const obj=new THREE.Mesh(
-new THREE.BoxGeometry(...size),mat(color)
-);
-obj.position.set(...pos);
-obj.userData={name,description};
-machine.add(obj);
-clickable.push(obj);
-return obj;
-}
-
-box(
-'Bodi instrumen',[0,1,0],[4.8,1.7,3],'#e5eaf0',
-'Bodi instrumen melindungi sistem optik dan elektronik spektrofotometer.'
-);
-
-box(
-'Layar digital',[-1.3,1.35,1.52],[1.3,.65,.05],'#082f49',
-'Layar digital menampilkan panjang gelombang dan hasil pengukuran.'
-);
-
-box(
-'Panel kontrol',[1,1.3,1.53],[1.3,.7,.05],'#334155',
-'Panel kontrol digunakan untuk mengatur parameter pengukuran.'
-);
-
-box(
-'Sumber cahaya',[-1.65,.55,-.65],[.55,.5,.55],'#fbbf24',
-'Sumber cahaya menghasilkan radiasi ultraviolet dan cahaya tampak.'
-);
-
-box(
-'Monokromator',[-.65,.55,-.65],[.55,.55,.55],'#64748b',
-'Monokromator memilih panjang gelombang tertentu dari cahaya sumber.'
-);
-
-box(
-'Detektor',[1.45,.55,-.65],[.5,.5,.5],'#34d399',
-'Detektor mengubah cahaya yang diterima menjadi sinyal listrik.'
-);
-
-const lid=new THREE.Group();
-lid.position.set(.35,1.95,-.15);
-machine.add(lid);
-
-const lidMesh=new THREE.Mesh(
-new THREE.BoxGeometry(1.4,.16,1.2),
-mat('#94a3b8')
-);
-lidMesh.position.set(0,.08,0);
-lid.add(lidMesh);
-lid.userData={
-name:'Tutup kompartemen',
-description:'Tutup melindungi tempat sampel dari cahaya luar.'
-};
-clickable.push(lidMesh);
-
-box(
-'Kuvet',[.35,2.25,-.15],[.32,.45,.32],'#67e8f9',
-'Kuvet adalah wadah sampel. Panjang lintasan optik yang umum digunakan adalah 1 cm.'
-);
-
-box(
-'Isi sampel',[.35,2.23,-.15],[.27,.30,.27],'#8b5cf6',
-'Sampel menyerap sebagian cahaya pada panjang gelombang tertentu.'
-);
-
-const beamGroup=new THREE.Group();
-machine.add(beamGroup);
-
-function addBeam(a,b,color){
-const start=new THREE.Vector3(...a);
-const end=new THREE.Vector3(...b);
-const dir=new THREE.Vector3().subVectors(end,start);
-
-const obj=new THREE.Mesh(
-new THREE.CylinderGeometry(.035,.035,dir.length(),12),
-mat(color,true,.9)
-);
-obj.position.copy(start).add(end).multiplyScalar(.5);
-obj.quaternion.setFromUnitVectors(
-new THREE.Vector3(0,1,0),dir.normalize()
-);
-beamGroup.add(obj);
-}
-
-addBeam(
-[-1.35,.55,-.65],[-.95,.55,-.65],'#f59e0b'
-);
-addBeam(
-[-.35,.55,-.65],[.2,2.2,-.15],'#22d3ee'
-);
-addBeam(
-[.5,2.2,-.15],[1.35,.55,-.65],'#22d3ee'
-);
-beamGroup.visible=false;
-
-function updateCamera(){
-phi=Math.max(.25,Math.min(1.5,phi));
-radius=Math.max(5,Math.min(16,radius));
-
-camera.position.set(
-radius*Math.sin(phi)*Math.sin(theta),
-radius*Math.cos(phi)+1.2,
-radius*Math.sin(phi)*Math.cos(theta)
-);
-camera.lookAt(0,1,0);
-}
-updateCamera();
-
-let dragging=false,lastX=0,lastY=0,downX=0,downY=0;
-const raycaster=new THREE.Raycaster();
-const pointer=new THREE.Vector2();
-
-renderer.domElement.addEventListener('pointerdown',e=>{
-dragging=true;
-lastX=downX=e.clientX;
-lastY=downY=e.clientY;
-renderer.domElement.setPointerCapture(e.pointerId);
-});
-
-renderer.domElement.addEventListener('pointermove',e=>{
-if(!dragging)return;
-
-theta-=(e.clientX-lastX)*.008;
-phi+=(e.clientY-lastY)*.008;
-lastX=e.clientX;
-lastY=e.clientY;
-updateCamera();
-});
-
-renderer.domElement.addEventListener('pointerup',e=>{
-dragging=false;
-
-if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>6)return;
-
-const rect=renderer.domElement.getBoundingClientRect();
-pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
-pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
-
-raycaster.setFromCamera(pointer,camera);
-const hit=raycaster.intersectObjects(clickable,false)[0];
-
-if(hit){
-document.getElementById('partTitle').textContent=
-hit.object.userData.name;
-document.getElementById('partInfo').textContent=
-hit.object.userData.description;
-}
-});
-
-renderer.domElement.addEventListener('wheel',e=>{
-e.preventDefault();
-radius+=e.deltaY*.008;
-updateCamera();
-},{passive:false});
-
-window.toggleRotation=function(){
-auto=!auto;
-document.getElementById('rotationButton').textContent=
-auto?'Ⅱ Hentikan putaran':'⟳ Putar otomatis';
-};
-
-window.toggleLid=function(){
-lidOpen=!lidOpen;
-lid.rotation.x=lidOpen?-1.05:0;
-};
-
-window.toggleBeam=function(){
-beamOn=!beamOn;
-beamGroup.visible=beamOn;
-document.getElementById('beamButton').textContent=
-beamOn?'Jalur cahaya: aktif':'Jalur cahaya';
-};
-
-window.resetModel=function(){
-theta=.7;
-phi=1;
-radius=9;
-auto=false;
-lidOpen=false;
-beamOn=false;
-lid.rotation.x=0;
-beamGroup.visible=false;
-updateCamera();
-
-document.getElementById('rotationButton').textContent=
-'⟳ Putar otomatis';
-document.getElementById('beamButton').textContent=
-'Jalur cahaya';
-document.getElementById('partTitle').textContent=
-'Pilih komponen';
-document.getElementById('partInfo').textContent=
-'Seret model untuk memutar dan klik komponen untuk melihat fungsinya.';
-};
-
-function animate(){
-requestAnimationFrame(animate);
-if(auto&&!dragging){
-theta+=.005;
-updateCamera();
-}
-renderer.render(scene,camera);
-}
-animate();
-
-window.addEventListener('resize',()=>{
-camera.aspect=root.clientWidth/root.clientHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(root.clientWidth,root.clientHeight);
-});
-})();
-</script>
+st.markdown("""
+<div style="text-align:center;color:#777;padding:12px">
+<b>UV-Vis Explorer</b><br>
+Laboratorium Virtual Spektrofotometri UV-Vis<br>
+Media pembelajaran dan simulasi instrumen
+</div>
+""", unsafe_allow_html=True)
 """
 
 
