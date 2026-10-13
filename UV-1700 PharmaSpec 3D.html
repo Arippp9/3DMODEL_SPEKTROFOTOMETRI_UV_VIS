@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UV-1700 PharmaSpec 3D</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#faf9f5;--fg:#1f1e1d;--mu:#5f5e5a;--card:#f1efe8;--bd:#d3d1c7;--ac:#185FA5;--acb:#e6f1fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1f1e1d;--fg:#f1efe8;--mu:#b4b2a9;--card:#2c2c2a;--bd:#444441;--ac:#85B7EB;--acb:#0c447c}}
+:root[data-theme="dark"]{--bg:#1f1e1d;--fg:#f1efe8;--mu:#b4b2a9;--card:#2c2c2a;--bd:#444441;--ac:#85B7EB;--acb:#0c447c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:20px;font-weight:500;margin:0}
+.sub{font-size:14px;color:var(--mu);margin:0 0 12px}
+.bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+button{font:inherit;font-size:14px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{background:var(--card)}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0}
+.on{background:var(--acb)!important;color:var(--ac)!important}
+.chip.on{border-color:var(--ac)}
+#cv{width:100%;height:min(64vh,560px);min-height:340px;display:block;touch-action:none;cursor:grab;border-radius:12px;background:var(--card)}
+#cv:active{cursor:grabbing}
+.hint{font-size:13px;color:var(--mu);margin:6px 0}
+#chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.info{background:var(--card);border-radius:8px;padding:12px 16px;min-height:72px}
+#i-name{font-weight:500;font-size:16px}
+#i-desc{font-size:14px;color:var(--mu)}
+</style>
+</head>
+<body>
+<main>
+<h1>Shimadzu UV-1700 PharmaSpec</h1>
+<p class="sub">Model 3D spektrofotometer UV-Vis. Putar 360°, lihat bagian luar dan dalam.</p>
+<div class="bar">
+  <div class="seg"><button id="b-ext" class="on">Tampak luar</button><button id="b-int">Tampak dalam</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="b-lid">Buka tutup sampel</button><button id="b-auto">Putar otomatis: nyala</button><button id="b-reset">Reset</button></div>
+</div>
+<canvas id="cv"></canvas>
+<div class="hint">Seret untuk memutar, scroll atau cubit untuk zoom, klik bagian alat untuk info.</div>
+<div id="chips"></div>
+<div class="info"><div id="i-name"></div><div id="i-desc"></div></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+var D={
+ext:{power:['Tombol power','Di sisi kiri alat: saklar merah dengan lampu indikator hijau di atasnya. Menyalakan alat; tunggu lampu stabil sebelum mengukur.'],
+lid:['Tutup kompartemen sampel','Di kiri atas. Dibuka untuk menaruh kuvet di dudukannya, ditutup saat mengukur agar cahaya luar tidak masuk. Coba tombol "Buka tutup sampel".'],
+screen:['Layar LCD','Layar lipat di kanan atas. Menampilkan menu, panjang gelombang, dan hasil pengukuran.'],
+keypad:['Keypad','Tombol F1 sampai F4, angka, dan fungsi seperti RETURN, MODE, GOTO WL, AUTO ZERO, START/STOP, PRINT, ENTER, CE.'],
+name:['Label tipe','Di depan kanan bawah: UV-1700 PharmaSpec, UV-VIS Spectrophotometer, Shimadzu.'],
+vent:['Ventilasi','Celah di belakang atas dan grille di bagian belakang. Membuang panas dari lampu.'],
+warn:['Label permukaan panas','Di sisi kanan. Peringatan: biarkan lampu dingin dulu sebelum diganti.'],
+port:['Port dan konektor','Di sisi kanan bawah dekat belakang. Tempat kabel data ke komputer.'],
+foot:['Kaki penyetel','Dua kaki berulir di depan kiri bawah untuk meratakan posisi alat.']},
+int:{t1:['1. Lampu tungsten','Sumber cahaya tampak (visible) dan inframerah dekat.'],
+t2:['2. Lampu deuterium','Sumber cahaya ultraviolet (UV).'],
+t3:['3. Lensa','Mengumpulkan cahaya lampu menjadi satu berkas yang diarahkan ke sampel.'],
+t4:['4. Shutter','Penutup mekanis yang menahan berkas, dipakai saat pengukuran gelap (dark) dan melindungi sampel dari penyinaran terus-menerus.'],
+t5:['5. Sampel (kuvet)','Ada di bawah tutup kompartemen sampel. Larutan di dalam kuvet menyerap sebagian cahaya.'],
+tm:['Cermin pemantul','Membelokkan berkas ke belakang supaya jalur cahaya muat di dalam badan alat (penyederhanaan dari gambar skema).'],
+t6:['6. Lensa','Memfokuskan cahaya yang sudah melewati sampel ke celah.'],
+t7:['7. Celah (slit)','Mengatur lebar berkas yang masuk ke kisi; memengaruhi resolusi spektrum.'],
+t8:['8. Kisi (grating)','Menguraikan cahaya menjadi warna/panjang gelombang yang berbeda.'],
+t9:['9. Detektor (diode array)','Barisan sensor yang menangkap seluruh panjang gelombang sekaligus.']}};
+var cv=document.getElementById('cv'),W=cv.clientWidth||680,H=cv.clientHeight||460;
+var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(W,H,false);
+var scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,W/H,0.1,100),dist=11.5;cam.position.set(0,0,dist);
+function resize(){W=cv.clientWidth;H=cv.clientHeight;renderer.setSize(W,H,false);cam.aspect=W/H;cam.updateProjectionMatrix()}
+window.addEventListener('resize',resize);
+scene.add(new THREE.AmbientLight(0xffffff,0.8));
+var dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(3,6,7);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0xffffff,0.35);dl2.position.set(-6,3,-5);scene.add(dl2);
+var root=new THREE.Group();scene.add(root);
+function M(g,c,id,o){o=o||{};var m=new THREE.Mesh(g,new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:0.65,metalness:0.05},o)));m.userData.id=id||null;m.userData.em=o.emissive||0;return m}
+function B(w,h,d,c,id,o){return M(new THREE.BoxGeometry(w,h,d),c,id,o)}
+function at(m,x,y,z,p){m.position.set(x,y,z);(p||root).add(m);return m}
+function tex(w,h,fn){var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');fn(x,w,h);var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+var shell=[];
+function S(m){m.material.transparent=true;shell.push(m.material);return m}
+var YEL=0xE6B65C,YEL2=0xEDC470;
+var baseM=at(S(B(4.3,0.32,3.3,0x55575A)),0,-0.55,0);
+var bodyM=at(S(B(4.4,0.95,3.4,YEL)),0,0.085,0);
+at(S(B(4.3,0.18,3.3,YEL2)),0,0.65,0);
+var edgeMat=new THREE.LineBasicMaterial({color:0x5F5E5A,transparent:true,opacity:1});
+[bodyM,baseM].forEach(function(m){m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry),edgeMat))});
+[[-1.8,-1.3],[1.8,-1.3],[1.8,1.3],[-1.8,1.3]].forEach(function(p){at(M(new THREE.CylinderGeometry(0.16,0.16,0.1,20),0x2C2C2A),p[0],-0.77,p[1])});
+[-1.7,-1.25].forEach(function(x){at(M(new THREE.CylinderGeometry(0.07,0.07,0.28,12),0xB4B2A9,'foot'),x,-0.72,1.72)});
+at(B(0.02,0.95,0.01,0x7A5A1E),-0.55,0.085,1.705);at(B(0.02,0.95,0.01,0x7A5A1E),-2.0,0.085,1.705);
+var pivot=new THREE.Group();pivot.position.set(-1.3,0.745,-0.35);root.add(pivot);
+var cover=S(B(1.3,0.14,1.8,YEL2,'lid'));cover.position.set(0,0.07,0.9);pivot.add(cover);
+var lip=S(B(1.3,0.1,0.06,YEL,'lid'));lip.position.set(0,0.0,1.78);pivot.add(lip);
+at(B(1.2,0.01,1.7,0x1d1d1b),-1.3,0.745,0.5);
+at(B(0.45,0.12,0.4,0x2C2C2A,'lid'),-1.3,0.8,0.12);at(B(0.45,0.12,0.4,0x2C2C2A,'lid'),-1.3,0.8,0.95);
+at(M(new THREE.CylinderGeometry(0.08,0.08,0.06,16),0xB4B2A9,'lid'),-1.3,0.78,0.55);
+var extD=new THREE.Group();root.add(extD);
+for(var i=0;i<30;i++)at(B(0.05,0.03,0.28,0x7A5A1E,'vent'),-1.95+i*0.13,0.745,-1.45,extD);
+for(var j=0;j<8;j++)at(B(0.9,0.03,0.02,0x7A5A1E,'vent'),1.55,j*0.07,-1.71,extD);
+at(S(B(1.9,0.06,1.25,0xEFE6CB)),1.25,0.77,1.05);
+var kpT=tex(512,300,function(x,w,h){x.fillStyle='#F6F3E8';x.fillRect(0,0,w,h);x.fillStyle='#8f8f8a';x.fillRect(20,12,472,28);
+ for(var i=0;i<4;i++){x.fillStyle='#2F5FB0';x.beginPath();x.ellipse(70+i*115,26,28,9,0,0,7);x.fill();x.fillStyle='#fff';x.font='bold 14px sans-serif';x.fillText('F'+(i+1),62+i*115,31)}
+ ['7','8','9','4','5','6','1','2','3','0','.','CE'].forEach(function(t,i){var cx=185+(i%3)*66,cy=85+Math.floor(i/3)*52;x.fillStyle='#8f8f8a';x.beginPath();x.ellipse(cx,cy,24,12,0,0,7);x.fill();x.fillStyle='#fff';x.font='bold 15px sans-serif';x.fillText(t,cx-t.length*4,cy+5)});
+ x.font='bold 13px sans-serif';
+ [['RETURN',80],['MODE',130],['PRINT',255]].forEach(function(a){x.fillStyle='#2F5FB0';x.beginPath();x.ellipse(36,a[1],14,8,0,0,7);x.fill();x.fillStyle='#333';x.fillText(a[0],56,a[1]+5)});
+ [['GOTO WL',100,'#2F5FB0'],['AUTO ZERO',150,'#9a9a95'],['ENTER',255,'#2F5FB0'],['START/STOP',205,'#2BA58A']].forEach(function(a){x.fillStyle=a[2];x.beginPath();x.ellipse(395,a[1],14,8,0,0,7);x.fill();x.fillStyle='#333';x.fillText(a[0],412,a[1]+5)})});
+var kp=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.0),new THREE.MeshStandardMaterial({map:kpT,roughness:0.7}));kp.userData={id:'keypad',em:0};kp.rotation.x=-Math.PI/2;kp.position.set(1.25,0.805,1.1);extD.add(kp);
+at(B(0.7,0.16,0.2,0xEFE6CB,'screen'),1.25,0.85,0.45);
+var lcd=new THREE.Group();lcd.position.set(1.25,0.9,0.4);lcd.rotation.x=-0.3;root.add(lcd);
+var hs=S(B(1.75,1.35,0.12,0xEFE6CB,'screen'));hs.position.set(0,0.7,0);lcd.add(hs);
+var gr=M(new THREE.PlaneGeometry(1.45,1.1),0xF6F1E0,'screen');gr.position.set(0,0.7,0.065);lcd.add(gr);
+var sc=M(new THREE.PlaneGeometry(0.95,0.8),0x2A3BA0,'screen',{emissive:0x0a1a60});sc.position.set(0,0.7,0.07);lcd.add(sc);
+var npT=tex(512,180,function(x,w,h){x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#222';x.font='bold 60px sans-serif';x.fillText('UV-1700',14,66);x.font='bold 26px sans-serif';x.fillText('PharmaSpec',286,66);x.fillStyle='#D0352B';x.font='bold 22px sans-serif';x.fillText('UV-VIS SPECTROPHOTOMETER',14,108);x.fillStyle='#222';x.font='bold 30px sans-serif';x.fillText('SHIMADZU',14,152)});
+var np=new THREE.Mesh(new THREE.PlaneGeometry(0.95,0.334),new THREE.MeshStandardMaterial({map:npT,roughness:0.6}));np.userData={id:'name',em:0};np.position.set(1.5,-0.1,1.705);extD.add(np);
+var wT=tex(256,140,function(x,w,h){x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#F2C230';x.fillRect(0,0,100,140);x.strokeStyle='#111';x.beginPath();x.moveTo(50,20);x.lineTo(88,95);x.lineTo(12,95);x.closePath();x.stroke();x.fillStyle='#111';x.font='bold 22px sans-serif';x.fillText('WARNING',112,36);x.font='bold 15px sans-serif';x.fillText('HOT SURFACE',112,62);x.font='12px sans-serif';x.fillText('Let lamp cool before',112,86);x.fillText('replacement',112,102)});
+var wn=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.38),new THREE.MeshStandardMaterial({map:wT,roughness:0.6}));wn.userData={id:'warn',em:0};wn.rotation.y=Math.PI/2;wn.position.set(2.205,0.1,-0.7);root.add(wn);
+at(B(0.05,0.2,1.0,0x1d1d1b,'port'),2.17,-0.55,-0.9);
+at(B(0.09,0.09,0.26,0xB4B2A9,'port'),2.2,-0.55,-0.7);
+at(B(0.09,0.1,0.16,0xD0352B,'port'),2.2,-0.55,-1.15);
+root.add(M(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(2.22,-0.55,-0.7),new THREE.Vector3(2.55,-0.56,-0.5),new THREE.Vector3(2.85,-0.75,0.2)]),24,0.03,8),0xF1EFE8,'port'));
+at(B(0.04,0.3,0.26,0x2C2C2A,'power'),-2.21,0.05,0.9);
+at(B(0.06,0.16,0.12,0xE24B4A,'power'),-2.24,0.0,0.9);
+at(M(new THREE.SphereGeometry(0.035,12,12),0x639922,'power',{emissive:0x2a5a10}),-2.235,0.2,0.9);
+var floorY=-0.34,py=0.12,inD=new THREE.Group();root.add(inD);inD.visible=false;
+at(B(4.1,0.03,3.2,0xB4B2A9),0,floorY,0,inD);
+function stand(x,z,y){var h=y-floorY;at(M(new THREE.CylinderGeometry(0.03,0.03,h,8),0x5F5E5A),x,floorY+h/2,z,inD)}
+var beams=[];
+function beam(w,h,d,x,z){beams.push(at(B(w,h,d,0xEF9F27,null,{emissive:0xEF9F27,emissiveIntensity:0.8}),x,py,z,inD))}
+beam(3.75,0.025,0.025,-0.025,0.5);beam(0.025,0.025,1.3,-1.9,-0.15);beam(1.3,0.025,0.025,-1.25,-0.8);
+[[1.85,0.5,0.13],[1.5,0.5,0.2],[1.15,0.5,0.2],[0.8,0.5,0.2],[-1.3,0.5,0.17],[-1.9,0.5,0.15],[-1.9,-0.8,0.15],[-1.5,-0.8,0.2],[-1.1,-0.8,0.2],[-0.6,-0.8,0.2]].forEach(function(p){stand(p[0],p[1],py-p[2])});
+at(M(new THREE.SphereGeometry(0.14,24,24),0xEF9F27,'t1',{emissive:0x6b4300}),1.85,py,0.5,inD);
+at(M(new THREE.CylinderGeometry(0.13,0.13,0.4,24),0xBA7517,'t2'),1.5,py,0.5,inD);
+function lens(x,z,id){var l=M(new THREE.SphereGeometry(0.2,24,24),0x5DCAA5,id,{transparent:true,opacity:0.8});l.scale.set(0.3,1,1);at(l,x,py,z,inD)}
+lens(1.15,0.5,'t3');at(B(0.05,0.4,0.3,0x888780,'t4'),0.8,py,0.5,inD);
+at(B(0.18,0.34,0.18,0xF0997B,'t5',{transparent:true,opacity:0.85}),-1.3,py,0.5,inD);
+at(B(0.05,0.3,0.34,0xD3D1C7,'tm'),-1.9,py,0.5,inD).rotation.y=Math.PI/4;
+at(B(0.05,0.3,0.34,0xD3D1C7,'tm'),-1.9,py,-0.8,inD).rotation.y=-Math.PI/4;
+lens(-1.5,-0.8,'t6');
+at(B(0.04,0.14,0.3,0x1D9E75,'t7'),-1.1,py+0.14,-0.8,inD);at(B(0.04,0.14,0.3,0x1D9E75,'t7'),-1.1,py-0.14,-0.8,inD);
+at(B(0.06,0.4,0.34,0x0F6E56,'t8'),-0.6,py,-0.8,inD).rotation.y=-0.5;
+at(B(1.3,0.07,0.14,0x7F77DD,'t9'),0.7,-0.28,-1.3,inD);
+var cols=[0x7F77DD,0x378ADD,0x1D9E75,0x97C459,0xEF9F27,0xE24B4A];
+for(var k=0;k<6;k++){var x0=0.05+k*0.2,x1=x0+0.2,g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute([-0.6,py-0.05,-0.8,x0,-0.25,-1.3,x1,-0.25,-1.3],3));
+ inD.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:cols[k],transparent:true,opacity:0.6,side:THREE.DoubleSide,depthWrite:false})))}
+at(new THREE.Mesh(new THREE.CircleGeometry(3.8,48),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.1})),0,-0.88,0).rotation.x=-Math.PI/2;
+var mode='ext',yaw=0.6,pitch=0.38,zoom=1,auto=true,lidOpen=false,lidA=0;
+var pickExt=[],pickInt=[];
+root.traverse(function(o){var id=o.userData&&o.userData.id;if(id){if(D.ext[id])pickExt.push(o);else if(D.int[id])pickInt.push(o)}});
+function setMode(m){mode=m;var ex=m=='ext';
+ shell.forEach(function(x){x.opacity=ex?1:0.1;x.depthWrite=ex});
+ edgeMat.opacity=ex?1:0.4;inD.visible=!ex;extD.visible=ex;
+ document.getElementById('b-ext').className=ex?'on':'';document.getElementById('b-int').className=ex?'':'on';
+ var ch=document.getElementById('chips');ch.innerHTML='';
+ Object.keys(D[m]).forEach(function(k){var b=document.createElement('button');b.className='chip';b.id='ch-'+k;b.textContent=D[m][k][0];b.onclick=function(){pick(k)};ch.appendChild(b)});
+ document.getElementById('i-name').textContent=ex?'Tampak luar':'Tampak dalam';
+ document.getElementById('i-desc').textContent=ex?'Tombol power di sisi kiri. Putar alat untuk melihat sisi kanan (port dan label) dan belakang (ventilasi).':'Badan dibuat transparan. Cahaya dari lampu (kanan) lewat kuvet di bawah tutup sampel (kiri), dibelokkan cermin ke belakang, lalu terurai oleh kisi ke detektor. Susunan mengikuti gambar skema, sedangkan susunan UV-1700 asli bisa berbeda.';
+ clearHL()}
+function clearHL(){root.traverse(function(o){if(o.isMesh&&o.userData.id&&o.material.emissive)o.material.emissive.setHex(o.userData.em||0)});document.querySelectorAll('.chip').forEach(function(e){e.classList.remove('on')})}
+function pick(k){clearHL();root.traverse(function(o){if(o.isMesh&&o.userData.id==k&&o.material.emissive)o.material.emissive.setHex(0x378ADD)});
+ var c=document.getElementById('ch-'+k);if(c)c.classList.add('on');
+ document.getElementById('i-name').textContent=D[mode][k][0];document.getElementById('i-desc').textContent=D[mode][k][1]}
+document.getElementById('b-ext').onclick=function(){setMode('ext')};
+document.getElementById('b-int').onclick=function(){setMode('int')};
+var bl=document.getElementById('b-lid');bl.onclick=function(){lidOpen=!lidOpen;bl.textContent=lidOpen?'Tutup tutup sampel':'Buka tutup sampel'};
+var ba=document.getElementById('b-auto');ba.onclick=function(){auto=!auto;ba.textContent='Putar otomatis: '+(auto?'nyala':'mati')};
+document.getElementById('b-reset').onclick=function(){yaw=0.6;pitch=0.38;zoom=1};
+var ptrs={},down=false,lx=0,ly=0,moved=0,pd=0;
+cv.addEventListener('pointerdown',function(e){ptrs[e.pointerId]=[e.clientX,e.clientY];down=true;lx=e.clientX;ly=e.clientY;moved=0;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',function(e){if(!down)return;ptrs[e.pointerId]=[e.clientX,e.clientY];var ids=Object.keys(ptrs);
+ if(ids.length==2){var a=ptrs[ids[0]],b=ptrs[ids[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pd)zoom=Math.max(0.5,Math.min(2.2,zoom*d/pd));pd=d;moved=99;return}
+ var dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);if(moved>4&&auto){auto=false;ba.textContent='Putar otomatis: mati'}yaw+=dx*0.01;pitch=Math.max(-1.5,Math.min(1.5,pitch+dy*0.01))});
+function up(e){delete ptrs[e.pointerId];pd=0;if(!Object.keys(ptrs).length)down=false}
+cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointerup',function(e){var was=moved<5;up(e);if(was){var r=cv.getBoundingClientRect(),n=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1),rc=new THREE.Raycaster();rc.setFromCamera(n,cam);var h=rc.intersectObjects(mode=='ext'?pickExt:pickInt,false);if(h.length)pick(h[0].object.userData.id)}});
+cv.addEventListener('wheel',function(e){e.preventDefault();zoom=Math.max(0.5,Math.min(2.2,zoom*(e.deltaY>0?0.92:1.08)))},{passive:false});
+function loop(){requestAnimationFrame(loop);if(auto&&!down)yaw+=0.004;
+ lidA+=((lidOpen?-1.25:0)-lidA)*0.12;pivot.rotation.x=lidA;
+ root.rotation.set(pitch,yaw,0,'XYZ');cam.position.z=dist/zoom;
+ if(mode=='int'){var e=0.6+0.3*Math.sin(Date.now()/250);beams.forEach(function(b){b.material.emissiveIntensity=e})}
+ renderer.render(scene,cam)}
+setMode('ext');resize();loop();
+</script>
+</body>
+</html>
