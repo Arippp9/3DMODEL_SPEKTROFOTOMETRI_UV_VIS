@@ -1,8 +1,8 @@
+
 import streamlit as st
 import streamlit.components.v1 as components
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import math
 
 st.set_page_config(
@@ -78,21 +78,29 @@ footer {visibility:hidden;}
 # =========================
 def hitung_absorbansi(T):
     if not math.isfinite(T) or T <= 0 or T > 1:
-        raise ValueError("Transmitansi harus lebih dari 0 sampai 1.")
+        raise ValueError(
+            "Transmitansi harus lebih dari 0 sampai 1."
+        )
     return -math.log10(T)
 
 
 def hitung_transmitansi(A):
     if not math.isfinite(A) or A < 0:
-        raise ValueError("Absorbansi tidak boleh negatif.")
+        raise ValueError(
+            "Absorbansi tidak boleh negatif."
+        )
     return 10 ** (-A)
 
 
 def hitung_konsentrasi(A, epsilon, b):
     if epsilon <= 0 or b <= 0:
-        raise ValueError("Nilai epsilon dan panjang lintasan harus lebih dari 0.")
+        raise ValueError(
+            "Nilai epsilon dan panjang lintasan harus lebih dari 0."
+        )
     if A < 0:
-        raise ValueError("Absorbansi tidak boleh negatif.")
+        raise ValueError(
+            "Absorbansi tidak boleh negatif."
+        )
     return A / (epsilon * b)
 
 
@@ -136,8 +144,11 @@ return;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#eaf2fb');
 
-const camera=new THREE.PerspectiveCamera(45,root.clientWidth/root.clientHeight,.1,100);
+const camera=new THREE.PerspectiveCamera(
+45,root.clientWidth/root.clientHeight,.1,100
+);
 let theta=.7,phi=1.0,radius=9,auto=false,lidOpen=false,beamOn=false;
+
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
 renderer.setSize(root.clientWidth,root.clientHeight);
@@ -146,6 +157,7 @@ renderer.domElement.style.height='100%';
 root.insertBefore(renderer.domElement,root.children[0]);
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x718096,2));
+
 const light=new THREE.DirectionalLight(0xffffff,2);
 light.position.set(5,8,6);
 scene.add(light);
@@ -158,7 +170,9 @@ floor.rotation.x=-Math.PI/2;
 floor.position.y=-.04;
 scene.add(floor);
 
-const grid=new THREE.GridHelper(20,40,0xa9bed5,0xd0dce9);
+const grid=new THREE.GridHelper(
+20,40,0xa9bed5,0xd0dce9
+);
 grid.position.y=-.02;
 scene.add(grid);
 
@@ -183,40 +197,61 @@ clickable.push(obj);
 return obj;
 }
 
-box('Bodi instrumen',[0,1,0],[4.8,1.7,3],'#e5eaf0',
-'Bodi instrumen melindungi sistem optik dan elektronik spektrofotometer.');
+box(
+'Bodi instrumen',[0,1,0],[4.8,1.7,3],'#e5eaf0',
+'Bodi instrumen melindungi sistem optik dan elektronik spektrofotometer.'
+);
 
-box('Layar digital',[-1.3,1.35,1.52],[1.3,.65,.05],'#082f49',
-'Layar digital menampilkan panjang gelombang dan hasil pengukuran.');
+box(
+'Layar digital',[-1.3,1.35,1.52],[1.3,.65,.05],'#082f49',
+'Layar digital menampilkan panjang gelombang dan hasil pengukuran.'
+);
 
-box('Panel kontrol',[1,1.3,1.53],[1.3,.7,.05],'#334155',
-'Panel kontrol digunakan untuk mengatur parameter pengukuran.');
+box(
+'Panel kontrol',[1,1.3,1.53],[1.3,.7,.05],'#334155',
+'Panel kontrol digunakan untuk mengatur parameter pengukuran.'
+);
 
-box('Sumber cahaya',[-1.65,.55,-.65],[.55,.5,.55],'#fbbf24',
-'Sumber cahaya menghasilkan radiasi ultraviolet dan cahaya tampak.');
+box(
+'Sumber cahaya',[-1.65,.55,-.65],[.55,.5,.55],'#fbbf24',
+'Sumber cahaya menghasilkan radiasi ultraviolet dan cahaya tampak.'
+);
 
-box('Monokromator',[-.65,.55,-.65],[.55,.55,.55],'#64748b',
-'Monokromator memilih panjang gelombang tertentu dari cahaya sumber.');
+box(
+'Monokromator',[-.65,.55,-.65],[.55,.55,.55],'#64748b',
+'Monokromator memilih panjang gelombang tertentu dari cahaya sumber.'
+);
 
-box('Detektor',[1.45,.55,-.65],[.5,.5,.5],'#34d399',
-'Detektor mengubah cahaya yang diterima menjadi sinyal listrik.');
+box(
+'Detektor',[1.45,.55,-.65],[.5,.5,.5],'#34d399',
+'Detektor mengubah cahaya yang diterima menjadi sinyal listrik.'
+);
 
 const lid=new THREE.Group();
 lid.position.set(.35,1.95,-.15);
 machine.add(lid);
+
 const lidMesh=new THREE.Mesh(
-new THREE.BoxGeometry(1.4,.16,1.2),mat('#94a3b8')
+new THREE.BoxGeometry(1.4,.16,1.2),
+mat('#94a3b8')
 );
 lidMesh.position.set(0,.08,0);
 lid.add(lidMesh);
-lid.userData={name:'Tutup kompartemen',description:'Tutup melindungi tempat sampel dari cahaya luar.'};
+lid.userData={
+name:'Tutup kompartemen',
+description:'Tutup melindungi tempat sampel dari cahaya luar.'
+};
 clickable.push(lidMesh);
 
-box('Kuvet',[.35,2.25,-.15],[.32,.45,.32],'#67e8f9',
-'Kuvet adalah wadah sampel. Panjang lintasan optik yang umum digunakan adalah 1 cm.');
+box(
+'Kuvet',[.35,2.25,-.15],[.32,.45,.32],'#67e8f9',
+'Kuvet adalah wadah sampel. Panjang lintasan optik yang umum digunakan adalah 1 cm.'
+);
 
-box('Isi sampel',[.35,2.23,-.15],[.27,.30,.27],'#8b5cf6',
-'Sampel menyerap sebagian cahaya pada panjang gelombang tertentu.');
+box(
+'Isi sampel',[.35,2.23,-.15],[.27,.30,.27],'#8b5cf6',
+'Sampel menyerap sebagian cahaya pada panjang gelombang tertentu.'
+);
 
 const beamGroup=new THREE.Group();
 machine.add(beamGroup);
@@ -225,23 +260,33 @@ function addBeam(a,b,color){
 const start=new THREE.Vector3(...a);
 const end=new THREE.Vector3(...b);
 const dir=new THREE.Vector3().subVectors(end,start);
+
 const obj=new THREE.Mesh(
 new THREE.CylinderGeometry(.035,.035,dir.length(),12),
 mat(color,true,.9)
 );
 obj.position.copy(start).add(end).multiplyScalar(.5);
-obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+obj.quaternion.setFromUnitVectors(
+new THREE.Vector3(0,1,0),dir.normalize()
+);
 beamGroup.add(obj);
 }
 
-addBeam([-1.35,.55,-.65],[-.95,.55,-.65],'#f59e0b');
-addBeam([-.35,.55,-.65],[.2,2.2,-.15],'#22d3ee');
-addBeam([.5,2.2,-.15],[1.35,.55,-.65],'#22d3ee');
+addBeam(
+[-1.35,.55,-.65],[-.95,.55,-.65],'#f59e0b'
+);
+addBeam(
+[-.35,.55,-.65],[.2,2.2,-.15],'#22d3ee'
+);
+addBeam(
+[.5,2.2,-.15],[1.35,.55,-.65],'#22d3ee'
+);
 beamGroup.visible=false;
 
 function updateCamera(){
 phi=Math.max(.25,Math.min(1.5,phi));
 radius=Math.max(5,Math.min(16,radius));
+
 camera.position.set(
 radius*Math.sin(phi)*Math.sin(theta),
 radius*Math.cos(phi)+1.2,
@@ -264,6 +309,7 @@ renderer.domElement.setPointerCapture(e.pointerId);
 
 renderer.domElement.addEventListener('pointermove',e=>{
 if(!dragging)return;
+
 theta-=(e.clientX-lastX)*.008;
 phi+=(e.clientY-lastY)*.008;
 lastX=e.clientX;
@@ -273,15 +319,21 @@ updateCamera();
 
 renderer.domElement.addEventListener('pointerup',e=>{
 dragging=false;
+
 if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>6)return;
+
 const rect=renderer.domElement.getBoundingClientRect();
 pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
 pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+
 raycaster.setFromCamera(pointer,camera);
 const hit=raycaster.intersectObjects(clickable,false)[0];
+
 if(hit){
-document.getElementById('partTitle').textContent=hit.object.userData.name;
-document.getElementById('partInfo').textContent=hit.object.userData.description;
+document.getElementById('partTitle').textContent=
+hit.object.userData.name;
+document.getElementById('partInfo').textContent=
+hit.object.userData.description;
 }
 });
 
@@ -310,20 +362,32 @@ beamOn?'Jalur cahaya: aktif':'Jalur cahaya';
 };
 
 window.resetModel=function(){
-theta=.7;phi=1;radius=9;
-auto=false;lidOpen=false;beamOn=false;
+theta=.7;
+phi=1;
+radius=9;
+auto=false;
+lidOpen=false;
+beamOn=false;
 lid.rotation.x=0;
 beamGroup.visible=false;
 updateCamera();
-document.getElementById('rotationButton').textContent='⟳ Putar otomatis';
-document.getElementById('beamButton').textContent='Jalur cahaya';
-document.getElementById('partTitle').textContent='Pilih komponen';
-document.getElementById('partInfo').textContent='Seret model untuk memutar dan klik komponen untuk melihat fungsinya.';
+
+document.getElementById('rotationButton').textContent=
+'⟳ Putar otomatis';
+document.getElementById('beamButton').textContent=
+'Jalur cahaya';
+document.getElementById('partTitle').textContent=
+'Pilih komponen';
+document.getElementById('partInfo').textContent=
+'Seret model untuk memutar dan klik komponen untuk melihat fungsinya.';
 };
 
 function animate(){
 requestAnimationFrame(animate);
-if(auto&&!dragging){theta+=.005;updateCamera();}
+if(auto&&!dragging){
+theta+=.005;
+updateCamera();
+}
 renderer.render(scene,camera);
 }
 animate();
@@ -351,7 +415,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 menu = st.columns(4)
-for col, nama in zip(menu, ["Home", "Teori", "Model 3D", "Perhitungan"]):
+
+for col, nama in zip(
+    menu, ["Home", "Teori", "Model 3D", "Perhitungan"]
+):
     if col.button(nama, use_container_width=True):
         st.session_state.halaman = nama
 
@@ -373,9 +440,12 @@ if halaman == "Home":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-title">Menu Utama</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Menu Utama</div>',
+        unsafe_allow_html=True
+    )
 
-    c1,c2,c3=st.columns(3)
+    c1, c2, c3 = st.columns(3)
 
     with c1:
         st.markdown("""
@@ -383,9 +453,10 @@ if halaman == "Home":
         <h2>📘 Teori</h2>
         Pelajari prinsip absorpsi cahaya, komponen alat, dan Hukum Lambert-Beer.
         </div>
-        """,unsafe_allow_html=True)
-        if st.button("Pelajari Teori →",use_container_width=True):
-            st.session_state.halaman="Teori"
+        """, unsafe_allow_html=True)
+
+        if st.button("Pelajari Teori →", use_container_width=True):
+            st.session_state.halaman = "Teori"
             st.rerun()
 
     with c2:
@@ -394,9 +465,10 @@ if halaman == "Home":
         <h2>🧊 Model 3D</h2>
         Jelajahi bagian spektrofotometer melalui model interaktif.
         </div>
-        """,unsafe_allow_html=True)
-        if st.button("Buka Model 3D →",use_container_width=True):
-            st.session_state.halaman="Model 3D"
+        """, unsafe_allow_html=True)
+
+        if st.button("Buka Model 3D →", use_container_width=True):
+            st.session_state.halaman = "Model 3D"
             st.rerun()
 
     with c3:
@@ -405,12 +477,16 @@ if halaman == "Home":
         <h2>🧮 Perhitungan</h2>
         Hitung absorbansi, transmitansi, konsentrasi, dan kurva kalibrasi.
         </div>
-        """,unsafe_allow_html=True)
-        if st.button("Mulai Perhitungan →",use_container_width=True):
-            st.session_state.halaman="Perhitungan"
+        """, unsafe_allow_html=True)
+
+        if st.button("Mulai Perhitungan →", use_container_width=True):
+            st.session_state.halaman = "Perhitungan"
             st.rerun()
 
-    st.info("Aplikasi ini merupakan media pembelajaran. Gunakan data hasil praktikum untuk analisis nyata.")
+    st.info(
+        "Aplikasi ini merupakan media pembelajaran. "
+        "Gunakan data hasil praktikum untuk analisis nyata."
+    )
 
 
 # =========================
@@ -418,7 +494,10 @@ if halaman == "Home":
 # =========================
 elif halaman == "Teori":
 
-    st.markdown('<div class="section-title">Pengertian Spektrofotometri UV-Vis</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Pengertian Spektrofotometri UV-Vis</div>',
+        unsafe_allow_html=True
+    )
 
     st.write("""
     Spektrofotometri UV-Vis merupakan metode analisis instrumental yang
@@ -427,7 +506,10 @@ elif halaman == "Teori":
     berdasarkan hubungan antara absorbansi dan konsentrasi.
     """)
 
-    st.markdown('<div class="section-title">Prinsip Dasar</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Prinsip Dasar</div>',
+        unsafe_allow_html=True
+    )
 
     st.markdown("""
     <div class="card">
@@ -447,27 +529,41 @@ elif halaman == "Teori":
     Kuvet digunakan sebagai wadah sampel. Kuvet kuarsa cocok untuk pengukuran
     UV, sedangkan kuvet kaca umumnya digunakan pada daerah cahaya tampak.
     </div>
-    """,unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-title">Komponen Instrumen</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Komponen Instrumen</div>',
+        unsafe_allow_html=True
+    )
 
     komponen = {
-        "Sumber cahaya":"Menghasilkan radiasi UV dan cahaya tampak.",
-        "Monokromator":"Memisahkan cahaya dan memilih panjang gelombang tertentu.",
-        "Celah optik":"Mengatur lebar berkas cahaya yang melewati sistem optik.",
-        "Kuvet":"Menampung larutan sampel pada lintasan cahaya.",
-        "Detektor":"Mengubah intensitas cahaya menjadi sinyal listrik.",
-        "Pengolah sinyal":"Menghitung dan mengolah sinyal pengukuran.",
-        "Layar":"Menampilkan nilai absorbansi, transmitansi, atau spektrum."
+        "Sumber cahaya":
+            "Menghasilkan radiasi UV dan cahaya tampak.",
+        "Monokromator":
+            "Memisahkan cahaya dan memilih panjang gelombang tertentu.",
+        "Celah optik":
+            "Mengatur lebar berkas cahaya yang melewati sistem optik.",
+        "Kuvet":
+            "Menampung larutan sampel pada lintasan cahaya.",
+        "Detektor":
+            "Mengubah intensitas cahaya menjadi sinyal listrik.",
+        "Pengolah sinyal":
+            "Menghitung dan mengolah sinyal pengukuran.",
+        "Layar":
+            "Menampilkan nilai absorbansi, transmitansi, atau spektrum."
     }
 
-    for nama,fungsi in komponen.items():
+    for nama, fungsi in komponen.items():
         with st.expander(nama):
             st.write(fungsi)
 
-    st.markdown('<div class="section-title">Hukum Lambert-Beer</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Hukum Lambert-Beer</div>',
+        unsafe_allow_html=True
+    )
 
     st.latex(r"A=\varepsilon b c")
+
     st.write("""
     Keterangan:
     - A = absorbansi
@@ -485,15 +581,22 @@ elif halaman == "Teori":
     Dalam rentang linear, absorbansi berbanding lurus dengan konsentrasi
     analit dan panjang lintasan optik.
     </div>
-    """,unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-title">Alur Kerja</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Alur Kerja</div>',
+        unsafe_allow_html=True
+    )
+
     st.write("""
     Sumber cahaya → Monokromator → Kuvet berisi sampel → Detektor →
     Pengolah sinyal → Hasil pengukuran.
     """)
 
-    st.markdown('<div class="section-title">Faktor yang Memengaruhi Hasil</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Faktor yang Memengaruhi Hasil</div>',
+        unsafe_allow_html=True
+    )
 
     faktor = [
         "Konsentrasi sampel terlalu tinggi.",
@@ -513,7 +616,10 @@ elif halaman == "Teori":
 # =========================
 elif halaman == "Model 3D":
 
-    st.markdown('<div class="section-title">Model 3D Spektrofotometer UV-Vis</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Model 3D Spektrofotometer UV-Vis</div>',
+        unsafe_allow_html=True
+    )
 
     st.markdown("""
     <div class="note">
@@ -521,11 +627,14 @@ elif halaman == "Model 3D":
     Klik komponen untuk membaca fungsinya, dan gunakan tombol untuk
     menampilkan jalur cahaya atau membuka tutup kompartemen.
     </div>
-    """,unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    components.html(MODEL_3D,height=600,scrolling=False)
+    components.html(MODEL_3D, height=600, scrolling=False)
 
-    st.caption("Model 3D ini merupakan ilustrasi edukasi, bukan replika instrumen dari merek tertentu.")
+    st.caption(
+        "Model 3D ini merupakan ilustrasi edukasi, "
+        "bukan replika instrumen dari merek tertentu."
+    )
 
 
 # =========================
@@ -533,9 +642,12 @@ elif halaman == "Model 3D":
 # =========================
 elif halaman == "Perhitungan":
 
-    st.markdown('<div class="section-title">Kalkulator Spektrofotometri</div>',unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Kalkulator Spektrofotometri</div>',
+        unsafe_allow_html=True
+    )
 
-    tab1,tab2,tab3=st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "Absorbansi & Transmitansi",
         "Lambert-Beer",
         "Kurva Kalibrasi"
@@ -547,37 +659,50 @@ elif halaman == "Perhitungan":
     with tab1:
         st.subheader("Konversi Absorbansi dan Transmitansi")
 
-        pilihan=st.radio(
+        pilihan = st.radio(
             "Pilih data yang diketahui",
-            ["Transmitansi (T)","Persen transmitansi (%T)","Absorbansi (A)"],
+            [
+                "Transmitansi (T)",
+                "Persen transmitansi (%T)",
+                "Absorbansi (A)"
+            ],
             horizontal=True
         )
 
-        nilai=st.number_input("Masukkan nilai",value=0.5,step=0.01,format="%.5f")
+        nilai = st.number_input(
+            "Masukkan nilai",
+            value=0.5,
+            step=0.01,
+            format="%.5f"
+        )
 
-        if st.button("Hitung",key="hitung_at"):
+        if st.button("Hitung", key="hitung_at"):
             try:
-                if pilihan=="Transmitansi (T)":
-                    T=nilai
-                    A=hitung_absorbansi(T)
+                if pilihan == "Transmitansi (T)":
+                    T = nilai
+                    A = hitung_absorbansi(T)
 
-                elif pilihan=="Persen transmitansi (%T)":
-                    if nilai<=0 or nilai>100:
-                        raise ValueError("%T harus lebih dari 0 sampai 100.")
-                    T=nilai/100
-                    A=hitung_absorbansi(T)
+                elif pilihan == "Persen transmitansi (%T)":
+                    if nilai <= 0 or nilai > 100:
+                        raise ValueError(
+                            "%T harus lebih dari 0 sampai 100."
+                        )
+                    T = nilai / 100
+                    A = hitung_absorbansi(T)
 
                 else:
-                    A=nilai
-                    T=hitung_transmitansi(A)
+                    A = nilai
+                    T = hitung_transmitansi(A)
 
-                c1,c2,c3=st.columns(3)
-                c1.metric("Absorbansi",f"{A:.5f}")
-                c2.metric("Transmitansi",f"{T:.6f}")
-                c3.metric("Transmitansi (%)",f"{T*100:.3f}%")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Absorbansi", f"{A:.5f}")
+                c2.metric("Transmitansi", f"{T:.6f}")
+                c3.metric("Transmitansi (%)", f"{T*100:.3f}%")
 
                 st.latex(r"A=-\log_{10}(T)")
-                st.write(f"A = −log₁₀({T:.6f}) = {A:.5f}")
+                st.write(
+                    f"A = −log₁₀({T:.6f}) = {A:.5f}"
+                )
 
             except ValueError as e:
                 st.error(str(e))
@@ -590,25 +715,44 @@ elif halaman == "Perhitungan":
 
         st.latex(r"c=\frac{A}{\varepsilon b}")
 
-        col1,col2,col3=st.columns(3)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            A=st.number_input("Absorbansi (A)",min_value=0.0,value=0.450,step=0.01)
+            A = st.number_input(
+                "Absorbansi (A)",
+                min_value=0.0,
+                value=0.450,
+                step=0.01
+            )
 
         with col2:
-            epsilon=st.number_input("ε (L mol⁻¹ cm⁻¹)",min_value=0.000001,value=12000.0,step=100.0)
+            epsilon = st.number_input(
+                "ε (L mol⁻¹ cm⁻¹)",
+                min_value=0.000001,
+                value=12000.0,
+                step=100.0
+            )
 
         with col3:
-            b=st.number_input("Panjang lintasan (cm)",min_value=0.000001,value=1.0,step=0.1)
+            b = st.number_input(
+                "Panjang lintasan (cm)",
+                min_value=0.000001,
+                value=1.0,
+                step=0.1
+            )
 
         if st.button("Hitung Konsentrasi"):
             try:
-                c=hitung_konsentrasi(A,epsilon,b)
+                c = hitung_konsentrasi(A, epsilon, b)
 
-                st.success(f"Konsentrasi = {c:.5e} mol/L")
-                st.write(f"Konsentrasi = {c*1000:.5f} mmol/L")
+                st.success(
+                    f"Konsentrasi = {c:.5e} mol/L"
+                )
+                st.write(
+                    f"Konsentrasi = {c*1000:.5f} mmol/L"
+                )
                 st.write("Langkah perhitungan:")
-                st.write(f"c = A / (ε × b)")
+                st.write("c = A / (ε × b)")
                 st.write(f"c = {A} / ({epsilon} × {b})")
                 st.write(f"c = {c:.5e} mol/L")
 
@@ -617,94 +761,139 @@ elif halaman == "Perhitungan":
 
     # -------------------------
     # KURVA KALIBRASI
+    # Tanpa grafik Plotly
     # -------------------------
     with tab3:
-        st.subheader("Kurva Kalibrasi")
+        st.subheader("Perhitungan Kurva Kalibrasi")
 
-        st.info("Data berikut adalah data simulasi untuk latihan. Ganti dengan data hasil praktikum.")
+        st.info(
+            "Data berikut adalah data simulasi untuk latihan. "
+            "Ganti dengan data hasil praktikum."
+        )
 
-        data_awal=pd.DataFrame({
-            "Konsentrasi (mg/L)":[0,2,4,6,8,10],
-            "Absorbansi":[0.002,0.101,0.205,0.298,0.405,0.502]
+        data_awal = pd.DataFrame({
+            "Konsentrasi (mg/L)": [0, 2, 4, 6, 8, 10],
+            "Absorbansi": [
+                0.002, 0.101, 0.205, 0.298, 0.405, 0.502
+            ]
         })
 
-        data=st.data_editor(
+        data = st.data_editor(
             data_awal,
             num_rows="dynamic",
             use_container_width=True,
             key="tabel_kalibrasi"
         )
 
-        A_sampel=st.number_input("Absorbansi sampel",value=0.350,step=0.01)
+        A_sampel = st.number_input(
+            "Absorbansi sampel",
+            value=0.350,
+            step=0.01
+        )
 
-        if st.button("Buat Kurva Kalibrasi"):
+        if st.button("Hitung Kurva Kalibrasi"):
             try:
-                d=data.apply(pd.to_numeric,errors="coerce").dropna()
+                d = data.apply(
+                    pd.to_numeric, errors="coerce"
+                ).dropna()
 
-                if len(d)<3:
-                    raise ValueError("Masukkan minimal 3 baris data yang lengkap.")
+                if len(d) < 3:
+                    raise ValueError(
+                        "Masukkan minimal 3 baris data yang lengkap."
+                    )
 
-                x=d.iloc[:,0].to_numpy(dtype=float)
-                y=d.iloc[:,1].to_numpy(dtype=float)
+                x = d.iloc[:, 0].to_numpy(dtype=float)
+                y = d.iloc[:, 1].to_numpy(dtype=float)
 
-                if np.any(x<0):
-                    raise ValueError("Konsentrasi tidak boleh negatif.")
+                if not np.all(np.isfinite(x)) or not np.all(np.isfinite(y)):
+                    raise ValueError(
+                        "Data harus berupa angka yang valid."
+                    )
 
-                if len(np.unique(x))<2:
-                    raise ValueError("Gunakan konsentrasi yang berbeda.")
+                if np.any(x < 0):
+                    raise ValueError(
+                        "Konsentrasi tidak boleh negatif."
+                    )
 
-                m,b0=np.polyfit(x,y,1)
-                pred=m*x+b0
+                if np.any(y < 0):
+                    raise ValueError(
+                        "Absorbansi tidak boleh negatif."
+                    )
 
-                ss_res=np.sum((y-pred)**2)
-                ss_tot=np.sum((y-np.mean(y))**2)
-                r2=1-ss_res/ss_tot if ss_tot!=0 else 1.0
+                if len(np.unique(x)) < 2:
+                    raise ValueError(
+                        "Gunakan konsentrasi yang berbeda."
+                    )
 
-                c1,c2=st.columns(2)
-                c1.metric("Persamaan regresi",f"y = {m:.5f}x + {b0:.5f}")
-                c2.metric("Koefisien determinasi R²",f"{r2:.5f}")
+                m, b0 = np.polyfit(x, y, 1)
+                pred = m * x + b0
 
-                if abs(m)<1e-12:
-                    raise ValueError("Kemiringan garis terlalu kecil untuk menghitung konsentrasi.")
-
-                konsentrasi=(A_sampel-b0)/m
-
-                st.success(f"Perkiraan konsentrasi sampel = {konsentrasi:.4f} mg/L")
-
-                xx=np.linspace(min(x),max(x),100)
-                fig=go.Figure()
-
-                fig.add_trace(go.Scatter(
-                    x=x,y=y,mode="markers",name="Data standar",
-                    marker=dict(size=10)
-                ))
-
-                fig.add_trace(go.Scatter(
-                    x=xx,y=m*xx+b0,mode="lines",name="Regresi linear"
-                ))
-
-                fig.add_trace(go.Scatter(
-                    x=[konsentrasi],y=[A_sampel],
-                    mode="markers",name="Sampel",
-                    marker=dict(size=13,symbol="star")
-                ))
-
-                fig.update_layout(
-                    template="plotly_white",
-                    xaxis_title="Konsentrasi (mg/L)",
-                    yaxis_title="Absorbansi",
-                    height=450
+                ss_res = np.sum((y - pred) ** 2)
+                ss_tot = np.sum((y - np.mean(y)) ** 2)
+                r2 = (
+                    1 - ss_res / ss_tot
+                    if ss_tot != 0 else 1.0
                 )
 
-                st.plotly_chart(fig,use_container_width=True)
+                st.markdown("### Hasil Regresi Linear")
 
-                if r2<0.99:
-                    st.warning("R² kurang dari 0,99. Periksa kembali data dan linearitas kurva.")
+                st.metric(
+                    "Persamaan regresi",
+                    f"y = {m:.5f}x + ({b0:.5f})"
+                )
 
-                if konsentrasi<min(x) or konsentrasi>max(x):
-                    st.warning("Konsentrasi sampel berada di luar rentang standar. Hasil merupakan ekstrapolasi.")
+                st.metric(
+                    "Koefisien determinasi (R²)",
+                    f"{r2:.5f}"
+                )
 
-            except (ValueError,TypeError) as e:
+                st.write(
+                    "Keterangan: y adalah absorbansi, x adalah "
+                    "konsentrasi, m adalah kemiringan garis, "
+                    "dan b adalah intersep."
+                )
+
+                if abs(m) < 1e-12:
+                    raise ValueError(
+                        "Kemiringan garis terlalu kecil "
+                        "untuk menghitung konsentrasi."
+                    )
+
+                konsentrasi = (A_sampel - b0) / m
+
+                st.markdown("### Hasil Analisis Sampel")
+                st.write(f"Absorbansi sampel = {A_sampel:.5f}")
+                st.write("Konsentrasi = (A - b) / m")
+                st.write(
+                    f"Konsentrasi = ({A_sampel:.5f} - "
+                    f"({b0:.5f})) / {m:.5f}"
+                )
+
+                st.success(
+                    f"Perkiraan konsentrasi sampel = "
+                    f"{konsentrasi:.4f} mg/L"
+                )
+
+                if r2 < 0.99:
+                    st.warning(
+                        "R² kurang dari 0,99. Periksa kembali "
+                        "data dan linearitas kurva."
+                    )
+
+                if (
+                    konsentrasi < np.min(x)
+                    or konsentrasi > np.max(x)
+                ):
+                    st.warning(
+                        "Konsentrasi sampel berada di luar "
+                        "rentang standar. Hasil merupakan ekstrapolasi."
+                    )
+
+            except (
+                ValueError,
+                TypeError,
+                np.linalg.LinAlgError
+            ) as e:
                 st.error(str(e))
 
 
@@ -712,10 +901,11 @@ elif halaman == "Perhitungan":
 # FOOTER
 # =========================
 st.divider()
+
 st.markdown("""
 <div style="text-align:center;color:#64748b;padding:10px">
 🔬 <b>UV-Vis Explorer</b><br>
 Laboratorium Virtual Spektrofotometri UV-Vis<br>
 Media pembelajaran dan simulasi analisis instrumental
 </div>
-""",unsafe_allow_html=True)
+""", unsafe_allow_html=True)
