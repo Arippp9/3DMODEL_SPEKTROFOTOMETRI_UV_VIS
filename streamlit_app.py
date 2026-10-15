@@ -350,7 +350,7 @@ with tab4:
         "(Cr VI) menggunakan metode spektrofotometri UV-Vis."
     )
 
-    html_path_crvi = Path(__file__).parent / "crvi.html.html"
+    html_path_crvi = Path(__file__).parent / "index (3).html"
 
     if html_path_crvi.exists():
         html_code_crvi = html_path_crvi.read_text(
