@@ -291,7 +291,7 @@ with tab2:
 # SECTION 3: MODEL 3D
 # ==========================================
 with tab3:
-    st.header("Shimadzu UV-1700 PharmaSpec")
+    st.header("UV-1700 PharmaSpec Double Beam")
 
     st.write("""
     Jelajahi model 3D instrumen spektrofotometer UV-Vis.
@@ -301,7 +301,7 @@ with tab3:
 
     html_path = (
         Path(__file__).parent
-        / "UV-1700 PharmaSpec 3D.html"
+        / "UV-1700 PharmaSpec Double Beam.html"
     )
 
     if html_path.exists():
