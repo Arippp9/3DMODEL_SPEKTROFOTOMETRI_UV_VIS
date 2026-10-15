@@ -105,11 +105,10 @@ t11:['Detektor referensi','Fotodioda silikon yang mengukur intensitas berkas ref
 t12:['Detektor sampel','Fotodioda silikon yang mengukur intensitas berkas sampel (I). Terang meredup bila sampel menyerap kuat. Absorbansi A = log(I₀/I).']}};
 var SP={
 blank:{n:'Blanko (pelarut)',c:0xdff1f7,p:[]},
-kmno4:{n:'KMnO₄ (permanganat)',c:0xa0206b,p:[[525,1,14],[546,.85,14],[310,.3,28],[350,.18,25]]},
-dikr:{n:'K₂Cr₂O₇ (dikromat)',c:0xe8891a,p:[[257,.8,22],[350,1,30],[445,.28,45],[235,.55,15]]},
-para:{n:'Parasetamol',c:0xe6efe9,p:[[243,1,15],[205,.7,12]]},
-kafein:{n:'Kafein',c:0xeeeee6,p:[[273,1,13],[205,.9,10]]},
-ribo:{n:'Riboflavin (vitamin B2)',c:0xd9d12a,p:[[267,.9,12],[373,.7,18],[445,.75,20]]}};
+crVI:{n:'Cr(VI) (Kromium Heksavalen)',c:0xffc000,p:[[257,1,18],[350,.75,25],[445,.35,30]]},
+dikromat:{n:'K₂Cr₂O₇ (dikromat)',c:0xe8891a,p:[[257,.8,22],[350,1,30],[445,.28,45],[235,.55,15]]},
+parasetamol:{n:'Parasetamol',c:0xe6efe9,p:[[243,1,15],[205,.7,12]]},
+kafein:{n:'Kafein',c:0xeeeee6,p:[[273,1,13],[205,.9,10]]};
 var st={on:false,ready:false,lam:540,mode:'A',zeroed:false,msg:'',sample:'blank',conc:1,live:null,curA:0,scanning:false,scanData:[],wt:0};
 var g=function(i){return document.getElementById(i)};
 var cv=g('cv'),W=cv.clientWidth||680,H=cv.clientHeight||460;
