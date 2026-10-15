@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulator Kadar Cr(VI) – Spektrofotometer UV-Vis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f8f7;--card:#fff;--ink:#1d2b27;--mute:#5d6e68;--line:#d9e2de;--acc:#6a2c91;--acc2:#2f7d6b;--warn:#b4531a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:28px 20px 8px;max-width:1000px;margin:auto}
+h1{margin:0 0 4px;font-size:1.6rem}
+h2{font-size:1.05rem;margin:0 0 10px}
+header p{margin:0;color:var(--mute)}
+main{max-width:1000px;margin:auto;padding:12px 20px 40px;display:grid;gap:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--mute);font-size:.85rem}
+input{width:100%;min-width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+input:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button{font:inherit;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer}
+button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+.x{padding:4px 9px;color:var(--warn)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.stat{flex:1;min-width:130px;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.stat b{display:block;font-size:1.15rem;color:var(--acc)}
+.stat span{color:var(--mute);font-size:.82rem}
+.eq{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f1ecf5;padding:8px 12px;border-radius:6px;margin-top:12px}
+.note{color:var(--mute);font-size:.85rem;margin-top:8px}
+.warn{color:var(--warn)}
+td.out{font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:600;background:#f1f6f4}
+.chart{position:relative;height:340px}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:.78rem;font-weight:600;margin-top:2px}
+.badge.ok{background:#dff3e8;color:#17653f}
+.badge.bad{background:#fbe3d6;color:#9a3d0c}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.grid label{font-size:.85rem;color:var(--mute);display:block}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kalkulator Kadar Cr(VI)</h1>
+  <p>Penetapan Cr(VI) dengan spektrofotometer UV-Vis: kurva kalibrasi, konsentrasi terukur, dan kadar dalam sampel.</p>
+</header>
+
+<main>
+<section>
+  <h2>1. Deret standar</h2>
+  <div class="scroll">
+  <table id="tStd">
+    <thead><tr><th>Konsentrasi (mg/L)</th><th>Absorbansi</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <div class="row"><button id="addStd">Tambah titik</button></div>
+  <div class="stats" id="regStats"></div>
+  <div class="eq" id="eq">y = a + bx</div>
+  <div class="note" id="regNote"></div>
+</section>
+
+<section>
+  <h2>Kurva kalibrasi</h2>
+  <div class="chart"><canvas id="chart"></canvas></div>
+</section>
+
+<section>
+  <h2>2. Data sampel</h2>
+  <div class="scroll">
+  <table id="tSmp">
+    <thead><tr>
+      <th>Nama sampel</th><th>Absorbansi</th><th>Bobot sampel (g)</th><th>Volume labu (mL)</th><th>Faktor pengenceran</th>
+      <th>Conc terukur (mg/L)</th><th>Kadar Cr(VI) (mg/kg)</th><th></th>
+    </tr></thead>
+    <tbody></tbody>
+    <tfoot><tr>
+      <td colspan="5">Rerata</td><td class="out" id="avgC">–</td><td class="out" id="avgK">–</td><td></td>
+    </tr></tfoot>
+  </table>
+  </div>
+  <div class="row">
+    <button id="addSmp">Tambah sampel</button>
+    <button id="resetAll">Kembalikan data contoh</button>
+    <button id="csv" class="primary">Unduh CSV</button>
+  </div>
+  <div class="stats" id="smpStats"></div>
+  <div class="note">
+    Rumus: Conc terukur = (y − a) / b &nbsp;|&nbsp;
+    Kadar (mg/kg) = Conc terukur (mg/L) × Volume labu (L) × fp ÷ Bobot sampel (kg).
+    Bobot dalam gram dan volume dalam mL diubah otomatis ke kg dan L.
+  </div>
+  <div class="note warn" id="smpWarn"></div>
+</section>
+
+<section>
+  <h2>3. Kontrol akurasi (spiking)</h2>
+  <div class="grid">
+    <div><label for="sA">Absorbansi sampel spike</label><input id="sA" inputmode="decimal"></div>
+    <div><label for="sM">Bobot sampel spike (g)</label><input id="sM" inputmode="decimal"></div>
+    <div><label for="sV">Volume labu (mL)</label><input id="sV" inputmode="decimal"></div>
+    <div><label for="sF">Faktor pengenceran</label><input id="sF" inputmode="decimal"></div>
+    <div><label for="sC">Conc spike ditambahkan (mg/L)</label><input id="sC" inputmode="decimal"></div>
+    <div><label for="sVa">Volume spike ditambahkan (mL)</label><input id="sVa" inputmode="decimal"></div>
+  </div>
+  <div class="stats" id="recStats"></div>
+  <div class="note">
+    %Rec = ((C3 − C1) / C2) × 100 %<br>
+    C1 = rerata kadar Cr(VI) sampel tanpa spike (mg/kg)<br>
+    C2 = Conc spike (mg/L) × Volume spike (L) × fp ÷ Bobot (kg)<br>
+    C3 = kadar Cr(VI) sampel yang dispike (mg/kg), dihitung dengan rumus yang sama seperti sampel biasa.
+  </div>
+</section>
+
+<section>
+  <h2>Syarat keberterimaan</h2>
+  <div class="scroll">
+  <table style="min-width:420px">
+    <thead><tr><th>Parameter</th><th>Syarat</th><th>Hasil</th><th>Status</th></tr></thead>
+    <tbody id="tAccept"></tbody>
+  </table>
+  </div>
+</section>
+</main>
+
+<script>
+// ---------- Data contoh (ganti dengan data praktikum sendiri) ----------
+const CONTOH_STD = [[0,0.000],[0.1,0.045],[0.2,0.092],[0.4,0.180],[0.6,0.272],[0.8,0.361]];
+const CONTOH_SMP = [
+  ["Sampel 1 (U1)",0.150,1.0012,50,1],
+  ["Sampel 1 (U2)",0.154,1.0005,50,1],
+  ["Sampel 1 (U3)",0.148,1.0020,50,1]
+];
+
+// Contoh sampel yang dispike: 10 mg/L Cr(VI) sebanyak 0,25 mL
+const CONTOH_SPIKE = { sA: 0.171, sM: 1.0010, sV: 50, sF: 1, sC: 10, sVa: 0.25 };
+
+const $ = id => document.getElementById(id);
+const num = v => parseFloat(String(v).replace(",", "."));
+const fmt = (v, d = 4) => Number.isFinite(v) ? v.toFixed(d) : "–";
+
+let reg = null, chart = null;
+let lastPres = null, lastRec = null;
+
+// Syarat keberterimaan
+const R_MIN = 0.995, PRES_MAX = 10, REC_MIN = 85, REC_MAX = 115;
+const badge = ok => `<span class="badge ${ok ? "ok" : "bad"}">${ok ? "Memenuhi" : "Tidak memenuhi"}</span>`;
+
+// ---------- Tabel standar ----------
+function addStd(c = "", a = "") {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><input inputmode="decimal" value="${c}"></td>
+                  <td><input inputmode="decimal" value="${a}"></td>
+                  <td><button class="x" title="Hapus">×</button></td>`;
+  tr.querySelector("button").onclick = () => { tr.remove(); hitung(); };
+  $("tStd").tBodies[0].appendChild(tr);
+}
+
+// ---------- Tabel sampel ----------
+function addSmp(n = "", a = "", m = "", v = "", fp = 1) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><input value="${n}"></td>
+    <td><input inputmode="decimal" value="${a}"></td>
+    <td><input inputmode="decimal" value="${m}"></td>
+    <td><input inputmode="decimal" value="${v}"></td>
+    <td><input inputmode="decimal" value="${fp}"></td>
+    <td class="out c">–</td><td class="out k">–</td>
+    <td><button class="x" title="Hapus">×</button></td>`;
+  tr.querySelector("button").onclick = () => { tr.remove(); hitung(); };
+  $("tSmp").tBodies[0].appendChild(tr);
+}
+
+// ---------- Regresi linier y = a + bx ----------
+function regresi(x, y) {
+  const n = x.length;
+  const sx = x.reduce((p, c) => p + c, 0), sy = y.reduce((p, c) => p + c, 0);
+  const sxy = x.reduce((p, c, i) => p + c * y[i], 0);
+  const sxx = x.reduce((p, c) => p + c * c, 0);
+  const syy = y.reduce((p, c) => p + c * c, 0);
+  const den = n * sxx - sx * sx;
+  const b = (n * sxy - sx * sy) / den;
+  const a = (sy - b * sx) / n;
+  const r = (n * sxy - sx * sy) / Math.sqrt(den * (n * syy - sy * sy));
+  return { a, b, r, r2: r * r, n };
+}
+
+const mean = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
+const sd = arr => arr.length < 2 ? NaN :
+  Math.sqrt(arr.reduce((p, c) => p + (c - mean(arr)) ** 2, 0) / (arr.length - 1));
+
+// ---------- Hitung semua ----------
+function hitung() {
+  // standar
+  const pts = [...$("tStd").tBodies[0].rows]
+    .map(r => [num(r.cells[0].firstChild.value), num(r.cells[1].firstChild.value)])
+    .filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+
+  if (pts.length >= 2 && new Set(pts.map(p => p[0])).size >= 2) {
+    reg = regresi(pts.map(p => p[0]), pts.map(p => p[1]));
+    $("eq").textContent = `y = ${fmt(reg.a, 5)} ${reg.b < 0 ? "−" : "+"} ${fmt(Math.abs(reg.b), 5)}x`;
+    $("regStats").innerHTML =
+      `<div class="stat"><b>${fmt(reg.a, 5)}</b><span>Intersep (a)</span></div>
+       <div class="stat"><b>${fmt(reg.b, 5)}</b><span>Slope (b)</span></div>
+       <div class="stat"><b>${fmt(reg.r, 5)}</b><span>r (syarat ≥ 0,995)<br>${badge(reg.r >= R_MIN)}</span></div>
+       <div class="stat"><b>${fmt(reg.r2, 5)}</b><span>R²</span></div>`;
+    $("regNote").textContent = reg.r < R_MIN
+      ? "Koefisien regresi (r) belum memenuhi syarat ≥ 0,995. Cek titik standar yang menyimpang atau ulangi pengukuran." : "";
+  } else {
+    reg = null;
+    $("eq").textContent = "y = a + bx";
+    $("regStats").innerHTML = "";
+    $("regNote").textContent = "Isi minimal 2 titik standar dengan konsentrasi berbeda.";
+  }
+
+  // sampel
+  const cs = [], ks = [];
+  let warn = [];
+  const smpPts = [];
+  [...$("tSmp").tBodies[0].rows].forEach(r => {
+    const i = r.querySelectorAll("input");
+    const nama = i[0].value || "(tanpa nama)";
+    const abs = num(i[1].value), m = num(i[2].value) / 1000,   // g -> kg
+          v = num(i[3].value) / 1000, fp = num(i[4].value);    // mL -> L
+    let c = NaN, k = NaN;
+    if (reg && Number.isFinite(abs)) {
+      c = (abs - reg.a) / reg.b;
+      k = c * v * fp / m;
+      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+      if (abs < Math.min(...ys) || abs > Math.max(...ys))
+        warn.push(`${nama}: absorbansi di luar rentang standar, sebaiknya diencerkan atau diulang.`);
+      smpPts.push({ x: c, y: abs });
+    }
+    r.querySelector(".c").textContent = fmt(c);
+    r.querySelector(".k").textContent = fmt(k);
+    if (Number.isFinite(c)) cs.push(c);
+    if (Number.isFinite(k)) ks.push(k);
+  });
+
+  $("avgC").textContent = cs.length ? fmt(mean(cs)) : "–";
+  $("avgK").textContent = ks.length ? fmt(mean(ks)) : "–";
+  $("smpWarn").innerHTML = warn.join("<br>");
+
+  // Kontrol presisi: %RPD untuk 2 ulangan, %RSD untuk 3 ulangan atau lebih
+  lastPres = null;
+  if (ks.length === 2)
+    lastPres = { nama: "%RPD", val: Math.abs(ks[0] - ks[1]) / mean(ks) * 100 };
+  else if (ks.length > 2)
+    lastPres = { nama: "%RSD", val: sd(ks) / mean(ks) * 100 };
+
+  $("smpStats").innerHTML = ks.length ? `
+    <div class="stat"><b>${fmt(mean(cs))}</b><span>Rerata conc terukur (mg/L)</span></div>
+    <div class="stat"><b>${fmt(mean(ks))}</b><span>Rerata kadar Cr(VI) (mg/kg)</span></div>
+    <div class="stat"><b>${fmt(sd(ks))}</b><span>SD kadar (mg/kg)</span></div>` +
+    (lastPres
+      ? `<div class="stat"><b>${fmt(lastPres.val, 2)} %</b><span>${lastPres.nama} (syarat ≤ ${PRES_MAX} %)<br>${badge(lastPres.val <= PRES_MAX)}</span></div>`
+      : `<div class="stat"><b>–</b><span>Presisi butuh minimal 2 ulangan</span></div>`) : "";
+
+  hitungAkurasi(ks.length ? mean(ks) : NaN);
+  tabelSyarat();
+  gambar(pts, smpPts);
+}
+
+// ---------- Kontrol akurasi: %Rec = ((C3 - C1) / C2) x 100 ----------
+function hitungAkurasi(C1) {
+  const g = id => num($(id).value);
+  const abs = g("sA"), m = g("sM") / 1000, v = g("sV") / 1000, fp = g("sF"),
+        cAdd = g("sC"), vAdd = g("sVa") / 1000;
+  lastRec = null;
+  let C2 = NaN, C3 = NaN;
+
+  if (reg && Number.isFinite(abs)) C3 = ((abs - reg.a) / reg.b) * v * fp / m;
+  C2 = cAdd * vAdd * fp / m;
+
+  if ([C1, C2, C3].every(Number.isFinite) && C2 !== 0)
+    lastRec = (C3 - C1) / C2 * 100;
+
+  $("recStats").innerHTML = `
+    <div class="stat"><b>${fmt(C1)}</b><span>C1 (mg/kg)</span></div>
+    <div class="stat"><b>${fmt(C2)}</b><span>C2 (mg/kg)</span></div>
+    <div class="stat"><b>${fmt(C3)}</b><span>C3 (mg/kg)</span></div>
+    <div class="stat"><b>${lastRec === null ? "–" : fmt(lastRec, 2) + " %"}</b>
+      <span>%Rec (syarat ${REC_MIN}–${REC_MAX} %)<br>${lastRec === null ? "Lengkapi data spike" : badge(lastRec >= REC_MIN && lastRec <= REC_MAX)}</span></div>`;
+}
+
+// ---------- Ringkasan syarat keberterimaan ----------
+function tabelSyarat() {
+  const baris = (p, s, h, ok) =>
+    `<tr><td>${p}</td><td>${s}</td><td>${h}</td><td>${ok === null ? "–" : badge(ok)}</td></tr>`;
+  $("tAccept").innerHTML =
+    baris("Koefisien regresi (r)", "≥ 0,995", reg ? fmt(reg.r, 5) : "–", reg ? reg.r >= R_MIN : null) +
+    baris(lastPres ? `Presisi (${lastPres.nama})` : "Presisi (%RPD / %RSD)", `≤ ${PRES_MAX} %`,
+          lastPres ? fmt(lastPres.val, 2) + " %" : "–", lastPres ? lastPres.val <= PRES_MAX : null) +
+    baris("Akurasi (%Rec)", `${REC_MIN}–${REC_MAX} %`,
+          lastRec !== null ? fmt(lastRec, 2) + " %" : "–",
+          lastRec !== null ? (lastRec >= REC_MIN && lastRec <= REC_MAX) : null);
+}
+
+// ---------- Grafik ----------
+function gambar(pts, smpPts) {
+  const ds = [{
+    label: "Standar", type: "scatter",
+    data: pts.map(p => ({ x: p[0], y: p[1] })),
+    backgroundColor: "#6a2c91", pointRadius: 5
+  }];
+  if (reg) {
+    const xs = pts.map(p => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs);
+    ds.push({
+      label: "Regresi linier", type: "line",
+      data: [{ x: x0, y: reg.a + reg.b * x0 }, { x: x1, y: reg.a + reg.b * x1 }],
+      borderColor: "#2f7d6b", borderWidth: 2, pointRadius: 0
+    });
+  }
+  if (smpPts.length) ds.push({
+    label: "Sampel", type: "scatter", data: smpPts,
+    backgroundColor: "#b4531a", pointStyle: "triangle", pointRadius: 6
+  });
+
+  if (chart) { chart.data.datasets = ds; chart.update(); return; }
+  chart = new Chart($("chart"), {
+    data: { datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      scales: {
+        x: { type: "linear", title: { display: true, text: "Konsentrasi (mg/L)" } },
+        y: { title: { display: true, text: "Absorbansi" } }
+      }
+    }
+  });
+}
+
+// ---------- Unduh CSV ----------
+function unduhCSV() {
+  const rows = [["Sampel","Absorbansi","Bobot (g)","Volume labu (mL)","fp","Conc terukur (mg/L)","Kadar Cr(VI) (mg/kg)"]];
+  [...$("tSmp").tBodies[0].rows].forEach(r => {
+    const i = [...r.querySelectorAll("input")].map(e => e.value);
+    rows.push([...i, r.querySelector(".c").textContent, r.querySelector(".k").textContent]);
+  });
+  rows.push(["Rerata","","","","",$("avgC").textContent,$("avgK").textContent]);
+  if (reg) rows.push([`Regresi: y = ${reg.a} + ${reg.b}x`, `r = ${reg.r}`, `R2 = ${reg.r2}`,
+    reg.r >= R_MIN ? "Memenuhi (r >= 0,995)" : "Tidak memenuhi (r >= 0,995)"]);
+  if (lastPres) rows.push([lastPres.nama, lastPres.val,
+    lastPres.val <= PRES_MAX ? "Memenuhi (<= 10%)" : "Tidak memenuhi (<= 10%)"]);
+  if (lastRec !== null) rows.push(["%Rec", lastRec,
+    lastRec >= REC_MIN && lastRec <= REC_MAX ? "Memenuhi (85-115%)" : "Tidak memenuhi (85-115%)"]);
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "hasil_crvi.csv";
+  a.click();
+}
+
+// ---------- Inisialisasi ----------
+function muatContoh() {
+  $("tStd").tBodies[0].innerHTML = "";
+  $("tSmp").tBodies[0].innerHTML = "";
+  CONTOH_STD.forEach(p => addStd(p[0], p[1]));
+  CONTOH_SMP.forEach(s => addSmp(...s));
+  Object.entries(CONTOH_SPIKE).forEach(([id, v]) => $(id).value = v);
+  hitung();
+}
+document.addEventListener("input", hitung);
+$("addStd").onclick = () => addStd();
+$("addSmp").onclick = () => addSmp("", "", "", 50, 1);
+$("resetAll").onclick = muatContoh;
+$("csv").onclick = unduhCSV;
+muatContoh();
+</script>
+</body>
+</html>
