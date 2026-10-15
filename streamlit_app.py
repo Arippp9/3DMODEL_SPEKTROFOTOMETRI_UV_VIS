@@ -338,267 +338,36 @@ with tab3:
 with tab4:
     st.header("Kalkulator Spektrofotometri UV-Vis")
 
-    subtab1, subtab2, subtab3 = st.tabs([
-        "Absorbansi & Transmitansi",
-        "Lambert-Beer",
-        "Kurva Kalibrasi"
-    ])
+  
+# ==========================================
+# SECTION 4: KALKULATOR Cr(VI)
+# ==========================================
+with tab4:
+    st.header("Kalkulator Kadar Cr(VI)")
 
-    # --------------------------------------
-    # ABSORBANSI DAN TRANSMITANSI
-    # --------------------------------------
-    with subtab1:
-        st.subheader("Konversi Absorbansi dan Transmitansi")
+    st.write(
+        "Kalkulator penetapan kadar kromium heksavalen "
+        "(Cr VI) menggunakan metode spektrofotometri UV-Vis."
+    )
 
-        mode = st.radio(
-            "Pilih jenis perhitungan:",
-            [
-                "Transmitansi (%) → Absorbansi",
-                "Absorbansi → Transmitansi (%)"
-            ],
-            horizontal=True
+    html_path_crvi = Path(__file__).parent / "kalkulator_crvi.html"
+
+    if html_path_crvi.exists():
+        html_code_crvi = html_path_crvi.read_text(
+            encoding="utf-8"
         )
 
-        if mode == "Transmitansi (%) → Absorbansi":
-            transmitansi = st.number_input(
-                "Transmitansi (%T)",
-                min_value=0.000001,
-                max_value=100.0,
-                value=50.0,
-                step=1.0
-            )
-
-            if st.button("Hitung Absorbansi"):
-                T = transmitansi / 100
-                absorbansi = -math.log10(T)
-
-                st.metric(
-                    "Nilai Absorbansi",
-                    f"{absorbansi:.6f}"
-                )
-
-                st.code(
-                    f"A = -log10({transmitansi}/100)\n"
-                    f"A = {absorbansi:.6f}"
-                )
-
-        else:
-            absorbansi_input = st.number_input(
-                "Absorbansi",
-                min_value=0.0,
-                value=0.30103,
-                step=0.01,
-                format="%.6f"
-            )
-
-            if st.button("Hitung Transmitansi"):
-                hasil_T = 10 ** (-absorbansi_input) * 100
-
-                st.metric(
-                    "Transmitansi (%T)",
-                    f"{hasil_T:.6f}%"
-                )
-
-                st.code(
-                    f"%T = 10^(-{absorbansi_input}) × 100\n"
-                    f"%T = {hasil_T:.6f}%"
-                )
-
-    # --------------------------------------
-    # LAMBERT-BEER
-    # --------------------------------------
-    with subtab2:
-        st.subheader("Perhitungan Hukum Lambert-Beer")
-
-        st.latex(r"A=\varepsilon b c")
-
-        pilihan = st.selectbox(
-            "Besaran yang ingin dihitung:",
-            [
-                "Konsentrasi (c)",
-                "Absorbansi (A)",
-                "Absorptivitas molar (ε)"
-            ]
+        components.html(
+            html_code_crvi,
+            height=1600,
+            scrolling=True
+        )
+    else:
+        st.error(
+            "File kalkulator_crvi.html tidak ditemukan. "
+            "Pastikan file berada satu folder dengan streamlit_app.py."
         )
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            A_input = st.number_input(
-                "Absorbansi (A)",
-                min_value=0.0,
-                value=0.5,
-                step=0.1
-            )
-
-            epsilon_input = st.number_input(
-                "Absorptivitas molar (ε)",
-                min_value=0.000001,
-                value=1000.0,
-                step=100.0
-            )
-
-        with col2:
-            b_input = st.number_input(
-                "Panjang lintasan optik (b)",
-                min_value=0.000001,
-                value=1.0,
-                step=0.1
-            )
-
-            c_input = st.number_input(
-                "Konsentrasi (c)",
-                min_value=0.0,
-                value=0.0005,
-                format="%.8f"
-            )
-
-        if st.button("Hitung Lambert-Beer"):
-            if pilihan == "Konsentrasi (c)":
-                hasil = A_input / (epsilon_input * b_input)
-
-                st.metric("Konsentrasi (c)", f"{hasil:.8g}")
-
-                st.code(
-                    f"c = A / (ε × b)\n"
-                    f"c = {A_input} / "
-                    f"({epsilon_input} × {b_input})\n"
-                    f"c = {hasil:.8g}"
-                )
-
-            elif pilihan == "Absorbansi (A)":
-                hasil = epsilon_input * b_input * c_input
-
-                st.metric("Absorbansi (A)", f"{hasil:.8g}")
-
-                st.code(
-                    f"A = ε × b × c\n"
-                    f"A = {epsilon_input} × "
-                    f"{b_input} × {c_input}\n"
-                    f"A = {hasil:.8g}"
-                )
-
-            else:
-                hasil = A_input / (b_input * c_input) if c_input > 0 else None
-
-                if hasil is None:
-                    st.error(
-                        "Konsentrasi harus lebih besar dari nol."
-                    )
-                else:
-                    st.metric(
-                        "Absorptivitas molar (ε)",
-                        f"{hasil:.8g}"
-                    )
-
-                    st.code(
-                        f"ε = A / (b × c)\n"
-                        f"ε = {A_input} / "
-                        f"({b_input} × {c_input})\n"
-                        f"ε = {hasil:.8g}"
-                    )
-
-        st.info(
-            "Pastikan satuan ε, b, dan c konsisten."
-        )
-
-    # --------------------------------------
-    # KURVA KALIBRASI
-    # --------------------------------------
-    with subtab3:
-        st.subheader("Regresi Linear Kurva Kalibrasi")
-
-        st.write(
-            "Masukkan data konsentrasi standar dan absorbansinya."
-        )
-
-        data_awal = pd.DataFrame({
-            "Konsentrasi": [1.0, 2.0, 3.0, 4.0, 5.0],
-            "Absorbansi": [0.10, 0.21, 0.31, 0.40, 0.52]
-        })
-
-        data = st.data_editor(
-            data_awal,
-            num_rows="dynamic",
-            use_container_width=True,
-            key="tabel_kalibrasi"
-        )
-
-        if st.button("Hitung Regresi Linear"):
-            data_bersih = data[
-                ["Konsentrasi", "Absorbansi"]
-            ].dropna()
-
-            if len(data_bersih) < 2:
-                st.error(
-                    "Masukkan minimal dua pasangan data."
-                )
-
-            elif data_bersih["Konsentrasi"].nunique() < 2:
-                st.error(
-                    "Konsentrasi harus memiliki minimal "
-                    "dua nilai berbeda."
-                )
-
-            else:
-                x = data_bersih[
-                    "Konsentrasi"
-                ].to_numpy(dtype=float)
-
-                y = data_bersih[
-                    "Absorbansi"
-                ].to_numpy(dtype=float)
-
-                if not (
-                    np.isfinite(x).all()
-                    and np.isfinite(y).all()
-                ):
-                    st.error("Data harus berupa angka yang valid.")
-
-                else:
-                    slope, intercept = np.polyfit(x, y, 1)
-                    y_prediksi = slope * x + intercept
-
-                    ss_res = np.sum((y - y_prediksi) ** 2)
-                    ss_tot = np.sum((y - np.mean(y)) ** 2)
-
-                    if ss_tot == 0:
-                        r_squared = float("nan")
-                    else:
-                        r_squared = 1 - ss_res / ss_tot
-
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        st.metric("Slope (a)", f"{slope:.6f}")
-
-                    with col2:
-                        st.metric("Intersep (b)", f"{intercept:.6f}")
-
-                    with col3:
-                        st.metric("R²", f"{r_squared:.6f}")
-
-                    st.markdown("### Persamaan Regresi")
-
-                    st.code(
-                        f"y = {slope:.6f}x + ({intercept:.6f})"
-                    )
-
-                    hasil_tabel = data_bersih.copy()
-                    hasil_tabel["Absorbansi Prediksi"] = y_prediksi
-
-                    st.markdown("### Hasil Perhitungan")
-
-                    st.dataframe(
-                        hasil_tabel,
-                        use_container_width=True
-                    )
-
-                    st.caption(
-                        "R² menunjukkan kesesuaian data terhadap "
-                        "model linear, tetapi bukan satu-satunya "
-                        "parameter untuk menilai validitas metode."
-                    )
 
 # ==========================================
 # FOOTER
