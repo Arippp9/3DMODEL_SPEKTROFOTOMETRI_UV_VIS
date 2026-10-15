@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UV-1700 PharmaSpec Double Beam</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#faf9f5;--fg:#1f1e1d;--mu:#5f5e5a;--card:#f1efe8;--bd:#d3d1c7;--ac:#185FA5;--acb:#e6f1fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1f1e1d;--fg:#f1efe8;--mu:#b4b2a9;--card:#2c2c2a;--bd:#444441;--ac:#85B7EB;--acb:#0c447c}}
+:root[data-theme="dark"]{--bg:#1f1e1d;--fg:#f1efe8;--mu:#b4b2a9;--card:#2c2c2a;--bd:#444441;--ac:#85B7EB;--acb:#0c447c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:20px;font-weight:500;margin:0}
+.sub{font-size:14px;color:var(--mu);margin:0 0 12px}
+.bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+button{font:inherit;font-size:14px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){background:var(--card)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0}
+.on{background:var(--acb)!important;color:var(--ac)!important}
+.chip.on{border-color:var(--ac)}
+#cv{width:100%;height:min(60vh,520px);min-height:320px;display:block;touch-action:none;cursor:grab;border-radius:12px;background:var(--card)}
+#cv:active{cursor:grabbing}
+.hint{font-size:13px;color:var(--mu);margin:6px 0}
+#chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.info{background:var(--card);border-radius:8px;padding:12px 16px;min-height:72px}
+#i-name{font-weight:500;font-size:16px}
+#i-desc{font-size:14px;color:var(--mu)}
+.panel{background:var(--card);border-radius:12px;padding:12px 16px;margin-top:12px;display:grid;gap:10px}
+.panel h2{font-size:15px;font-weight:500;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+select,input[type=number]{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:5px 8px}
+input[type=number]{width:90px}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--ac)}
+.pill{font-size:13px;padding:2px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--bd)}
+.ro{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.ro div{background:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--mu)}
+.ro b{display:block;font-size:18px;font-weight:500;color:var(--fg)}
+#gr{width:100%;height:220px;display:block}
+#pk{font-size:13px;color:var(--mu);min-height:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Shimadzu UV-1700 PharmaSpec (double beam)</h1>
+<p class="sub">Model 3D spektrofotometer UV-Vis yang bisa dijalankan. Nyalakan alat, auto zero dengan blanko, pilih sampel, lalu ukur atau scan.</p>
+<div class="bar">
+  <div class="seg"><button id="b-ext" class="on">Tampak luar</button><button id="b-int">Tampak dalam</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="b-lid">Buka tutup sampel</button><button id="b-auto">Putar otomatis: nyala</button><button id="b-reset">Reset</button></div>
+</div>
+<canvas id="cv"></canvas>
+<div class="hint">Seret untuk memutar, scroll atau cubit untuk zoom, klik bagian alat untuk info (klik tombol power merah untuk menyalakan).</div>
+<div id="chips"></div>
+<div class="info"><div id="i-name"></div><div id="i-desc"></div></div>
+
+<section class="panel">
+  <h2>Panel kontrol</h2>
+  <div class="row"><button id="pw">Nyalakan alat</button><span class="pill" id="stt">Mati</span><span class="pill" id="lampi">Lampu: -</span></div>
+  <div class="row">
+    <label>Sampel <select id="smp"></select></label>
+    <label style="flex:1;display:flex;gap:8px;align-items:center;min-width:200px">Konsentrasi <input type="range" id="conc" min="0.1" max="2.5" step="0.1" value="1"><span id="concv">1.0×</span></label>
+  </div>
+  <div class="row">
+    <label>λ (nm) <input type="number" id="lam" min="190" max="1100" step="1" value="540"></label>
+    <input type="range" id="lamr" min="190" max="1100" step="1" value="540">
+    <div class="seg"><button id="mA" class="on">Abs</button><button id="mT">%T</button></div>
+  </div>
+  <div class="row"><button id="az">Auto zero (blanko)</button><button id="scn">Scan 200–800 nm</button></div>
+  <div class="ro">
+    <div>Panjang gelombang<b id="r-l">-</b></div>
+    <div>Absorbansi<b id="r-a">-</b></div>
+    <div>Transmitans<b id="r-t">-</b></div>
+    <div>Auto zero<b id="r-z">Belum</b></div>
+  </div>
+  <canvas id="gr"></canvas>
+  <div id="pk"></div>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+var D={
+ext:{power:['Tombol power','Di sisi kiri alat: saklar merah dengan lampu indikator hijau. Klik untuk menyalakan atau mematikan alat; setelah menyala ada pemanasan lampu sekitar 3 detik.'],
+lid:['Tutup kompartemen sampel','Di kiri atas. Dibuka untuk menaruh dua kuvet (referensi dan sampel), ditutup saat mengukur. Jika terbuka, pengukuran ditolak.'],
+screen:['Layar LCD','Menampilkan panjang gelombang dan pembacaan Abs atau %T secara langsung, juga status auto zero.'],
+keypad:['Keypad','Pada alat asli: F1 sampai F4, angka, RETURN, MODE, GOTO WL, AUTO ZERO, START/STOP, PRINT, ENTER, CE. Di simulasi ini gunakan panel kontrol di bawah.'],
+name:['Label tipe','UV-1700 PharmaSpec, UV-VIS Spectrophotometer, Double Beam, Shimadzu.'],
+vent:['Ventilasi','Celah di belakang atas dan grille di bagian belakang. Membuang panas dari lampu.'],
+warn:['Label permukaan panas','Di sisi kanan. Biarkan lampu dingin dulu sebelum diganti.'],
+port:['Port dan konektor','Di sisi kanan bawah. Tempat kabel data ke komputer.'],
+foot:['Kaki penyetel','Dua kaki berulir di depan kiri bawah untuk meratakan posisi alat.']},
+int:{t1:['Lampu tungsten (halogen)','Sumber cahaya tampak dan inframerah dekat, dipakai di atas 360 nm.'],
+t2:['Lampu deuterium (D₂)','Sumber cahaya ultraviolet, dipakai di bawah 360 nm.'],
+t3:['Cermin pengalih lampu','Memilih lampu mana yang masuk ke monokromator. Berpindah otomatis pada 360 nm.'],
+t4:['Celah masuk','Membatasi berkas yang masuk ke monokromator.'],
+t5:['Kisi (grating)','Menguraikan cahaya putih; sudut kisi berputar mengikuti panjang gelombang yang dipilih. Warna berkas setelahnya menunjukkan λ terpilih.'],
+t6:['Celah keluar','Hanya meloloskan pita sempit (sekitar 1 nm) panjang gelombang terpilih.'],
+t7:['Pemecah berkas (beam splitter)','Inti double beam: membagi berkas monokromatik menjadi dua, satu ke kuvet sampel dan satu ke kuvet referensi.'],
+t8:['Cermin pemantul','Membelokkan berkas referensi menuju kuvet referensi.'],
+t9:['Kuvet referensi','Berisi blanko (pelarut). Intensitasnya menjadi pembanding (I₀) dan mengoreksi fluktuasi lampu.'],
+t10:['Kuvet sampel','Berisi larutan sampel. Berkas yang menembusnya melemah sesuai absorbansi. Warna cairan mengikuti sampel terpilih.'],
+t11:['Detektor referensi','Fotodioda silikon yang mengukur intensitas berkas referensi (I₀).'],
+t12:['Detektor sampel','Fotodioda silikon yang mengukur intensitas berkas sampel (I). Terang meredup bila sampel menyerap kuat. Absorbansi A = log(I₀/I).']}};
+var SP={
+blank:{n:'Blanko (pelarut)',c:0xdff1f7,p:[]},
+kmno4:{n:'KMnO₄ (permanganat)',c:0xa0206b,p:[[525,1,14],[546,.85,14],[310,.3,28],[350,.18,25]]},
+dikr:{n:'K₂Cr₂O₇ (dikromat)',c:0xe8891a,p:[[257,.8,22],[350,1,30],[445,.28,45],[235,.55,15]]},
+para:{n:'Parasetamol',c:0xe6efe9,p:[[243,1,15],[205,.7,12]]},
+kafein:{n:'Kafein',c:0xeeeee6,p:[[273,1,13],[205,.9,10]]},
+ribo:{n:'Riboflavin (vitamin B2)',c:0xd9d12a,p:[[267,.9,12],[373,.7,18],[445,.75,20]]}};
+var st={on:false,ready:false,lam:540,mode:'A',zeroed:false,msg:'',sample:'blank',conc:1,live:null,curA:0,scanning:false,scanData:[],wt:0};
+var g=function(i){return document.getElementById(i)};
+var cv=g('cv'),W=cv.clientWidth||680,H=cv.clientHeight||460;
+var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(W,H,false);
+var scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,W/H,0.1,100),dist=11.5;cam.position.set(0,0,dist);
+function resize(){W=cv.clientWidth;H=cv.clientHeight;renderer.setSize(W,H,false);cam.aspect=W/H;cam.updateProjectionMatrix();drawChart()}
+window.addEventListener('resize',resize);
+scene.add(new THREE.AmbientLight(0xffffff,0.8));
+var dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(3,6,7);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0xffffff,0.35);dl2.position.set(-6,3,-5);scene.add(dl2);
+var root=new THREE.Group();scene.add(root);
+function M(g,c,id,o){o=o||{};var m=new THREE.Mesh(g,new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:0.65,metalness:0.05},o)));m.userData.id=id||null;m.userData.em=o.emissive||0;return m}
+function B(w,h,d,c,id,o){return M(new THREE.BoxGeometry(w,h,d),c,id,o)}
+function at(m,x,y,z,p){m.position.set(x,y,z);(p||root).add(m);return m}
+function tex(w,h,fn){var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');fn(x,w,h);var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+var shell=[];
+function S(m){m.material.transparent=true;shell.push(m.material);return m}
+var YEL=0xE6B65C,YEL2=0xEDC470;
+var baseM=at(S(B(4.3,0.32,3.3,0x55575A)),0,-0.55,0);
+var bodyM=at(S(B(4.4,0.95,3.4,YEL)),0,0.085,0);
+at(S(B(4.3,0.18,3.3,YEL2)),0,0.65,0);
+var edgeMat=new THREE.LineBasicMaterial({color:0x5F5E5A,transparent:true,opacity:1});
+[bodyM,baseM].forEach(function(m){m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry),edgeMat))});
+[[-1.8,-1.3],[1.8,-1.3],[1.8,1.3],[-1.8,1.3]].forEach(function(p){at(M(new THREE.CylinderGeometry(0.16,0.16,0.1,20),0x2C2C2A),p[0],-0.77,p[1])});
+[-1.7,-1.25].forEach(function(x){at(M(new THREE.CylinderGeometry(0.07,0.07,0.28,12),0xB4B2A9,'foot'),x,-0.72,1.72)});
+at(B(0.02,0.95,0.01,0x7A5A1E),-0.55,0.085,1.705);at(B(0.02,0.95,0.01,0x7A5A1E),-2.0,0.085,1.705);
+var pivot=new THREE.Group();pivot.position.set(-1.3,0.745,-0.35);root.add(pivot);
+var cover=S(B(1.3,0.14,1.8,YEL2,'lid'));cover.position.set(0,0.07,0.9);pivot.add(cover);
+var lip=S(B(1.3,0.1,0.06,YEL,'lid'));lip.position.set(0,0.0,1.78);pivot.add(lip);
+at(B(1.2,0.01,1.7,0x1d1d1b),-1.3,0.745,0.5);
+at(B(0.45,0.12,0.4,0x2C2C2A,'lid'),-1.3,0.8,0.12);at(B(0.45,0.12,0.4,0x2C2C2A,'lid'),-1.3,0.8,1.2);
+var extD=new THREE.Group();root.add(extD);
+for(var i=0;i<30;i++)at(B(0.05,0.03,0.28,0x7A5A1E,'vent'),-1.95+i*0.13,0.745,-1.45,extD);
+for(var j=0;j<8;j++)at(B(0.9,0.03,0.02,0x7A5A1E,'vent'),1.55,j*0.07,-1.71,extD);
+at(S(B(1.9,0.06,1.25,0xEFE6CB)),1.25,0.77,1.05);
+var kpT=tex(512,300,function(x,w,h){x.fillStyle='#F6F3E8';x.fillRect(0,0,w,h);x.fillStyle='#8f8f8a';x.fillRect(20,12,472,28);
+ for(var i=0;i<4;i++){x.fillStyle='#2F5FB0';x.beginPath();x.ellipse(70+i*115,26,28,9,0,0,7);x.fill();x.fillStyle='#fff';x.font='bold 14px sans-serif';x.fillText('F'+(i+1),62+i*115,31)}
+ ['7','8','9','4','5','6','1','2','3','0','.','CE'].forEach(function(t,i){var cx=185+(i%3)*66,cy=85+Math.floor(i/3)*52;x.fillStyle='#8f8f8a';x.beginPath();x.ellipse(cx,cy,24,12,0,0,7);x.fill();x.fillStyle='#fff';x.font='bold 15px sans-serif';x.fillText(t,cx-t.length*4,cy+5)});
+ x.font='bold 13px sans-serif';
+ [['RETURN',80],['MODE',130],['PRINT',255]].forEach(function(a){x.fillStyle='#2F5FB0';x.beginPath();x.ellipse(36,a[1],14,8,0,0,7);x.fill();x.fillStyle='#333';x.fillText(a[0],56,a[1]+5)});
+ [['GOTO WL',100,'#2F5FB0'],['AUTO ZERO',150,'#9a9a95'],['ENTER',255,'#2F5FB0'],['START/STOP',205,'#2BA58A']].forEach(function(a){x.fillStyle=a[2];x.beginPath();x.ellipse(395,a[1],14,8,0,0,7);x.fill();x.fillStyle='#333';x.fillText(a[0],412,a[1]+5)})});
+var kp=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.0),new THREE.MeshStandardMaterial({map:kpT,roughness:0.7}));kp.userData={id:'keypad',em:0};kp.rotation.x=-Math.PI/2;kp.position.set(1.25,0.805,1.1);extD.add(kp);
+at(B(0.7,0.16,0.2,0xEFE6CB,'screen'),1.25,0.85,0.45);
+var lcd=new THREE.Group();lcd.position.set(1.25,0.9,0.4);lcd.rotation.x=-0.3;root.add(lcd);
+var hs=S(B(1.75,1.35,0.12,0xEFE6CB,'screen'));hs.position.set(0,0.7,0);lcd.add(hs);
+var gr0=M(new THREE.PlaneGeometry(1.5,1.15),0xF6F1E0,'screen');gr0.position.set(0,0.7,0.065);lcd.add(gr0);
+var lc=document.createElement('canvas');lc.width=320;lc.height=240;var lq=lc.getContext('2d'),lcdT=new THREE.CanvasTexture(lc);
+var sc=new THREE.Mesh(new THREE.PlaneGeometry(1.28,0.96),new THREE.MeshBasicMaterial({map:lcdT}));sc.userData={id:'screen',em:0};sc.position.set(0,0.7,0.07);lcd.add(sc);
+var npT=tex(512,180,function(x,w,h){x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#222';x.font='bold 60px sans-serif';x.fillText('UV-1700',14,66);x.font='bold 26px sans-serif';x.fillText('PharmaSpec',286,66);x.fillStyle='#D0352B';x.font='bold 20px sans-serif';x.fillText('UV-VIS SPECTROPHOTOMETER',14,108);x.fillStyle='#222';x.font='bold 15px sans-serif';x.fillText('DOUBLE BEAM',352,108);x.font='bold 30px sans-serif';x.fillText('SHIMADZU',14,152)});
+var np=new THREE.Mesh(new THREE.PlaneGeometry(0.95,0.334),new THREE.MeshStandardMaterial({map:npT,roughness:0.6}));np.userData={id:'name',em:0};np.position.set(1.5,-0.1,1.705);extD.add(np);
+var wT=tex(256,140,function(x,w,h){x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#F2C230';x.fillRect(0,0,100,140);x.strokeStyle='#111';x.beginPath();x.moveTo(50,20);x.lineTo(88,95);x.lineTo(12,95);x.closePath();x.stroke();x.fillStyle='#111';x.font='bold 22px sans-serif';x.fillText('WARNING',112,36);x.font='bold 15px sans-serif';x.fillText('HOT SURFACE',112,62);x.font='12px sans-serif';x.fillText('Let lamp cool before',112,86);x.fillText('replacement',112,102)});
+var wn=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.38),new THREE.MeshStandardMaterial({map:wT,roughness:0.6}));wn.userData={id:'warn',em:0};wn.rotation.y=Math.PI/2;wn.position.set(2.205,0.1,-0.7);root.add(wn);
+at(B(0.05,0.2,1.0,0x1d1d1b,'port'),2.17,-0.55,-0.9);
+at(B(0.09,0.09,0.26,0xB4B2A9,'port'),2.2,-0.55,-0.7);
+at(B(0.09,0.1,0.16,0xD0352B,'port'),2.2,-0.55,-1.15);
+root.add(M(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(2.22,-0.55,-0.7),new THREE.Vector3(2.55,-0.56,-0.5),new THREE.Vector3(2.85,-0.75,0.2)]),24,0.03,8),0xF1EFE8,'port'));
+at(B(0.04,0.3,0.26,0x2C2C2A,'power'),-2.21,0.05,0.9);
+at(B(0.06,0.16,0.12,0xE24B4A,'power'),-2.24,0.0,0.9);
+var led=at(M(new THREE.SphereGeometry(0.035,12,12),0x2f4a22,'power',{emissive:0x2a5a10}),-2.235,0.2,0.9);led.material.emissiveIntensity=0;
+/* kuvet */
+var matS=new THREE.MeshStandardMaterial({color:0xdff1f7,roughness:0.3,transparent:true,opacity:0.85}),matR=matS.clone();
+function cuv(x,y,z,mat,id,par){at(M(new THREE.BoxGeometry(0.22,0.4,0.22),0xdff1f7,id,{transparent:true,opacity:0.3,depthWrite:false}),x,y,z,par);var l=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.28,0.17),mat);l.userData={id:id,em:0};at(l,x,y-0.03,z,par)}
+var extC=new THREE.Group();root.add(extC);
+at(B(1.15,0.05,0.45,0x2C2C2A),-1.35,0.78,0.45,extC);cuv(-1.7,0.99,0.45,matR,null,extC);cuv(-1.0,0.99,0.45,matS,null,extC);
+/* interior double beam */
+var floorY=-0.34,py=0.12,inD=new THREE.Group();root.add(inD);inD.visible=false;
+at(B(4.1,0.03,3.2,0xB4B2A9),0,floorY,0,inD);
+function stand(x,z,h0){var h=h0-floorY;at(M(new THREE.CylinderGeometry(0.03,0.03,h,8),0x5F5E5A),x,floorY+h/2,z,inD)}
+function bmat(c){return new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0.9,depthWrite:false})}
+var mD=bmat(0xbfd4ff),mW=bmat(0xffd27a),m0=bmat(0xffe9b0),m1=bmat(0xff0000),mS=bmat(0xff0000),mR=bmat(0xff0000),beams=[];
+function seg(m,x,z,len,ax){var s=new THREE.Mesh(ax=='x'?new THREE.BoxGeometry(len,0.03,0.03):new THREE.BoxGeometry(0.03,0.03,len),m);s.position.set(x,py,z);inD.add(s);beams.push(s);return s}
+var segD=seg(mD,1.72,-0.5,0.35,'x'),segW=seg(mW,1.55,-0.2,0.6,'z');seg(m0,1.18,-0.5,0.75,'x');seg(m1,-0.1,-0.5,1.8,'x');seg(mS,-1.0,0.4,1.8,'z');seg(m1,-1.35,-0.5,0.7,'x');seg(mR,-1.7,0.4,1.8,'z');
+[[1.55,0.1],[1.9,-0.5],[1.55,-0.5],[1.25,-0.5],[0.8,-0.5],[0.4,-0.5],[-1.0,-0.5],[-1.7,-0.5],[-1.7,1.3],[-1.0,1.3]].forEach(function(p){stand(p[0],p[1],py-0.2)});
+var lW=at(M(new THREE.SphereGeometry(0.13,24,24),0xEF9F27,'t1',{emissive:0x6b4300}),1.55,py,0.1,inD);
+var lD=at(M(new THREE.CylinderGeometry(0.12,0.12,0.4,24),0x7d8fbf,'t2',{emissive:0x2a3a8a}),1.9,py,-0.5,inD);
+at(B(0.04,0.3,0.3,0xD3D1C7,'t3'),1.55,py,-0.5,inD).rotation.y=Math.PI/4;
+at(B(0.04,0.14,0.3,0x1D9E75,'t4'),1.25,py+0.14,-0.5,inD);at(B(0.04,0.14,0.3,0x1D9E75,'t4'),1.25,py-0.14,-0.5,inD);
+var grt=at(B(0.06,0.4,0.34,0x0F6E56,'t5'),0.8,py,-0.5,inD);
+at(B(0.04,0.14,0.3,0x1D9E75,'t6'),0.4,py+0.14,-0.5,inD);at(B(0.04,0.14,0.3,0x1D9E75,'t6'),0.4,py-0.14,-0.5,inD);
+at(B(0.04,0.3,0.34,0x85B7EB,'t7',{transparent:true,opacity:0.7}),-1.0,py,-0.5,inD).rotation.y=Math.PI/4;
+at(B(0.05,0.3,0.34,0xD3D1C7,'t8'),-1.7,py,-0.5,inD).rotation.y=Math.PI/4;
+cuv(-1.7,py,0.45,matR,'t9',inD);cuv(-1.0,py,0.45,matS,'t10',inD);
+var dR=at(B(0.22,0.1,0.14,0x3C3489,'t11',{emissive:0x1a4f8a}),-1.7,py,1.3,inD),dS=at(B(0.22,0.1,0.14,0x3C3489,'t12',{emissive:0x1a4f8a}),-1.0,py,1.3,inD);
+at(new THREE.Mesh(new THREE.CircleGeometry(3.8,48),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.1})),0,-0.88,0).rotation.x=-Math.PI/2;
+/* simulasi */
+function wl2c(l){var r=0,gg=0,b=0;if(l<380)return 0x9b7cff;if(l<440){r=(440-l)/60;b=1}else if(l<490){gg=(l-440)/50;b=1}else if(l<510){gg=1;b=(510-l)/20}else if(l<580){r=(l-510)/70;gg=1}else if(l<645){r=1;gg=(645-l)/65}else if(l<=750){r=1}else return 0xaa2222;return(Math.round(r*255)<<16)|(Math.round(gg*255)<<8)|Math.round(b*255)}
+function absAt(l,noise){var s=SP[st.sample],a=0;s.p.forEach(function(p){a+=p[1]*Math.exp(-0.5*Math.pow((l-p[0])/p[2],2))});a*=0.8*st.conc;if(!st.zeroed)a+=0.04+0.03*Math.sin(l/80);if(noise)a+=(Math.random()-0.5)*0.002;return Math.max(-0.002,Math.min(3.5,a))}
+var lidOpen=false,lidA=0;
+function drawLCD(){var x=lq;x.fillStyle=st.on?'#1c2f8f':'#0b0e2a';x.fillRect(0,0,320,240);
+ if(st.on){x.fillStyle='#fff';x.font='bold 18px sans-serif';x.fillText('UV-1700 PharmaSpec',12,26);x.fillStyle='#8fb0ff';x.fillRect(12,34,296,2);
+ if(!st.ready){x.font='20px sans-serif';x.fillStyle='#fff';x.fillText('Inisialisasi lampu...',12,100);x.fillText('Mohon tunggu',12,130)}
+ else{x.font='16px sans-serif';x.fillText('Photometric  '+(st.mode=='A'?'Abs':'%T'),12,62);x.font='bold 30px sans-serif';x.fillText(st.lam.toFixed(1)+' nm',12,110);
+  var v=st.live;x.font='bold 44px sans-serif';x.fillText(v?(st.mode=='A'?v.A.toFixed(3):v.T.toFixed(1)):'----',12,170);
+  x.font='14px sans-serif';x.fillStyle='#ffd27a';x.fillText(lidOpen?'Tutup kompartemen sampel!':(st.msg||(st.zeroed?'Auto zero OK':'Belum auto zero')),12,215)}}
+ lcdT.needsUpdate=true}
+function drawChart(){var c=g('gr'),dp=Math.min(window.devicePixelRatio||1,2),w=c.clientWidth,h=c.clientHeight;if(!w)return;c.width=w*dp;c.height=h*dp;var x=c.getContext('2d');x.scale(dp,dp);
+ var cs=getComputedStyle(document.documentElement),mu=cs.getPropertyValue('--mu').trim(),bd=cs.getPropertyValue('--bd').trim(),ac=cs.getPropertyValue('--ac').trim();
+ var L=44,R=10,T=10,Bt=30,pw=w-L-R,ph=h-T-Bt,isA=st.mode=='A',d=st.scanData;
+ var mx=Math.max.apply(null,d.map(function(p){return p[1]}).concat([0]));var ym=isA?Math.max(1.2,Math.ceil(mx*5)/5):100;
+ function X(l){return L+(l-200)/600*pw}function Y(v){return T+ph-Math.max(0,Math.min(ym,v))/ym*ph}
+ x.font='11px system-ui,sans-serif';x.fillStyle=mu;x.strokeStyle=bd;x.lineWidth=1;
+ for(var l=200;l<=800;l+=100){x.beginPath();x.moveTo(X(l),T);x.lineTo(X(l),T+ph);x.stroke();x.fillText(l,X(l)-9,h-14)}
+ for(var i=0;i<=4;i++){var v=ym*i/4;x.beginPath();x.moveTo(L,Y(v));x.lineTo(L+pw,Y(v));x.stroke();x.fillText(isA?v.toFixed(2):v.toFixed(0),4,Y(v)+4)}
+ x.fillText('Panjang gelombang (nm)',L+pw/2-60,h-2);x.save();x.translate(11,T+ph/2+25);x.rotate(-Math.PI/2);x.fillText(isA?'Absorbansi':'% Transmitans',0,0);x.restore();
+ if(d.length){x.strokeStyle=ac;x.lineWidth=2;x.beginPath();d.forEach(function(p,i){var yy=Y(isA?p[1]:100*Math.pow(10,-p[1]));i?x.lineTo(X(p[0]),yy):x.moveTo(X(p[0]),yy)});x.stroke()}
+ if(st.lam>=200&&st.lam<=800){x.setLineDash([4,4]);x.strokeStyle=mu;x.beginPath();x.moveTo(X(st.lam),T);x.lineTo(X(st.lam),T+ph);x.stroke();x.setLineDash([])}}
+function refresh(){var rdy=st.on&&st.ready&&!st.scanning;
+ g('pw').textContent=st.on?'Matikan alat':'Nyalakan alat';g('stt').textContent=!st.on?'Mati':!st.ready?'Pemanasan lampu...':st.scanning?'Scanning...':'Siap';
+ g('lampi').textContent='Lampu: '+(!st.on?'-':st.lam<360?'D₂ (UV)':'Tungsten (Vis)');
+ g('az').disabled=!rdy;g('scn').disabled=!rdy;g('smp').disabled=st.scanning;
+ var v=st.live;g('r-l').textContent=st.on?st.lam.toFixed(1)+' nm':'-';g('r-a').textContent=v?v.A.toFixed(3):'-';g('r-t').textContent=v?v.T.toFixed(1)+' %':'-';g('r-z').textContent=st.zeroed?'Sudah':'Belum';
+ g('mA').className=st.mode=='A'?'on':'';g('mT').className=st.mode=='T'?'on':'';drawLCD()}
+function tick(){if(st.on&&st.ready&&!lidOpen&&!st.scanning){var A=absAt(st.lam,true);st.live={A:A,T:100*Math.pow(10,-A)}}else if(!st.scanning)st.live=null;refresh()}
+setInterval(tick,250);
+function setLam(v){v=Math.max(190,Math.min(1100,Math.round(+v)||540));st.lam=v;g('lam').value=v;g('lamr').value=v;st.msg='';st.live=null;drawChart();tick()}
+function togglePower(){if(st.scanning)return;if(st.on){st.on=false;st.ready=false;st.zeroed=false;st.live=null;st.msg=''}else{st.on=true;st.ready=false;st.msg='';var t=++st.wt;setTimeout(function(){if(st.on&&st.wt==t){st.ready=true;st.msg='Siap. Lakukan auto zero.';refresh()}},3000)}refresh()}
+g('pw').onclick=togglePower;
+g('lam').onchange=function(){setLam(this.value)};g('lamr').oninput=function(){setLam(this.value)};
+g('mA').onclick=function(){st.mode='A';drawChart();tick()};g('mT').onclick=function(){st.mode='T';drawChart();tick()};
+var sel=g('smp');Object.keys(SP).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=SP[k].n;sel.appendChild(o)});
+sel.onchange=function(){st.sample=this.value;matS.color.setHex(SP[this.value].c);st.msg='';tick()};
+g('conc').oninput=function(){st.conc=+this.value;g('concv').textContent=st.conc.toFixed(1)+'×';tick()};
+g('az').onclick=function(){if(lidOpen){st.msg='Tutup kompartemen!';refresh();return}if(st.sample!='blank'){st.msg='Pilih Blanko dulu';refresh();return}
+ st.msg='Auto zero...';refresh();setTimeout(function(){if(!st.on)return;st.zeroed=true;st.msg='Auto zero selesai';tick()},700)};
+g('scn').onclick=function(){if(lidOpen){st.msg='Tutup kompartemen!';refresh();return}var keep=st.lam,l=200;st.scanning=true;st.scanData=[];st.live=null;g('pk').textContent='';
+ (function step(){if(!st.on){st.scanning=false;refresh();return}
+  for(var i=0;i<3&&l<=800;i++){st.lam=l;st.scanData.push([l,absAt(l,true)]);l+=2}
+  g('lam').value=st.lam;g('lamr').value=st.lam;drawChart();refresh();
+  if(l>800){st.scanning=false;var b=st.scanData.reduce(function(a,p){return p[1]>a[1]?p:a});g('pk').textContent=b[1]>0.08?'λ maks ≈ '+b[0]+' nm (A = '+b[1].toFixed(3)+')':'Tidak ada puncak serapan berarti.';setLam(keep);return}
+  requestAnimationFrame(step)})()};
+/* UI 3D */
+var mode='ext',yaw=0.6,pitch=0.38,zoom=1,auto=true;
+var pickExt=[],pickInt=[];
+root.traverse(function(o){var id=o.userData&&o.userData.id;if(id){if(D.ext[id])pickExt.push(o);else if(D.int[id])pickInt.push(o)}});
+function setMode(m){mode=m;var ex=m=='ext';
+ shell.forEach(function(x){x.opacity=ex?1:0.1;x.depthWrite=ex});
+ edgeMat.opacity=ex?1:0.4;inD.visible=!ex;extD.visible=ex;
+ g('b-ext').className=ex?'on':'';g('b-int').className=ex?'':'on';
+ var ch=g('chips');ch.innerHTML='';
+ Object.keys(D[m]).forEach(function(k){var b=document.createElement('button');b.className='chip';b.id='ch-'+k;b.textContent=D[m][k][0];b.onclick=function(){pick(k)};ch.appendChild(b)});
+ g('i-name').textContent=ex?'Tampak luar':'Tampak dalam (double beam)';
+ g('i-desc').textContent=ex?'Tombol power di sisi kiri. Putar alat untuk melihat sisi kanan (port dan label) dan belakang (ventilasi).':'Cahaya lampu (kanan) dipilih, diuraikan kisi, lalu dibagi pemecah berkas menjadi berkas sampel dan berkas referensi (kiri). Kedua berkas menembus kuvet dan ditangkap dua detektor di depan. Susunan disederhanakan, tata letak UV-1700 asli bisa berbeda.';
+ clearHL()}
+function clearHL(){root.traverse(function(o){if(o.isMesh&&o.userData.id&&o.material.emissive)o.material.emissive.setHex(o.userData.em||0)});document.querySelectorAll('.chip').forEach(function(e){e.classList.remove('on')})}
+function pick(k){clearHL();root.traverse(function(o){if(o.isMesh&&o.userData.id==k&&o.material.emissive)o.material.emissive.setHex(0x378ADD)});
+ var c=g('ch-'+k);if(c)c.classList.add('on');
+ g('i-name').textContent=D[mode][k][0];g('i-desc').textContent=D[mode][k][1]}
+g('b-ext').onclick=function(){setMode('ext')};g('b-int').onclick=function(){setMode('int')};
+var bl=g('b-lid');bl.onclick=function(){lidOpen=!lidOpen;bl.textContent=lidOpen?'Tutup tutup sampel':'Buka tutup sampel';tick()};
+var ba=g('b-auto');ba.onclick=function(){auto=!auto;ba.textContent='Putar otomatis: '+(auto?'nyala':'mati')};
+g('b-reset').onclick=function(){yaw=0.6;pitch=0.38;zoom=1};
+var ptrs={},down=false,lx=0,ly=0,moved=0,pd=0;
+cv.addEventListener('pointerdown',function(e){ptrs[e.pointerId]=[e.clientX,e.clientY];down=true;lx=e.clientX;ly=e.clientY;moved=0;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',function(e){if(!down)return;ptrs[e.pointerId]=[e.clientX,e.clientY];var ids=Object.keys(ptrs);
+ if(ids.length==2){var a=ptrs[ids[0]],b=ptrs[ids[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pd)zoom=Math.max(0.5,Math.min(2.2,zoom*d/pd));pd=d;moved=99;return}
+ var dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);if(moved>4&&auto){auto=false;ba.textContent='Putar otomatis: mati'}yaw+=dx*0.01;pitch=Math.max(-1.5,Math.min(1.5,pitch+dy*0.01))});
+function up(e){delete ptrs[e.pointerId];pd=0;if(!Object.keys(ptrs).length)down=false}
+cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointerup',function(e){var was=moved<5;up(e);if(was){var r=cv.getBoundingClientRect(),n=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1),rc=new THREE.Raycaster();rc.setFromCamera(n,cam);var h=rc.intersectObjects(mode=='ext'?pickExt:pickInt,false);if(h.length){var k=h[0].object.userData.id;pick(k);if(k=='power')togglePower()}}});
+cv.addEventListener('wheel',function(e){e.preventDefault();zoom=Math.max(0.5,Math.min(2.2,zoom*(e.deltaY>0?0.92:1.08)))},{passive:false});
+function loop(){requestAnimationFrame(loop);if(auto&&!down)yaw+=0.004;
+ lidA+=((lidOpen?-1.25:0)-lidA)*0.12;pivot.rotation.x=lidA;extC.visible=mode=='ext'&&lidA<-0.6;
+ root.rotation.set(pitch,yaw,0,'XYZ');cam.position.z=dist/zoom;
+ var on=st.on,uv=st.lam<360,pl=0.8+0.2*Math.sin(Date.now()/120),c=wl2c(st.lam),T=Math.pow(10,-absAt(st.lam,false));
+ led.material.color.setHex(on?0x7fe03a:0x2f4a22);led.material.emissiveIntensity=on?1.6:0;
+ beams.forEach(function(b){b.visible=on});segD.visible=on&&uv;segW.visible=on&&!uv;
+ m0.color.setHex(uv?0xbfd4ff:0xffe9b0);[m1,mS,mR].forEach(function(m){m.color.setHex(c);m.opacity=0.9*pl});mS.opacity=(0.2+0.8*T)*pl;
+ grt.rotation.y=0.3+(st.lam-190)/910*0.9;
+ lW.material.emissiveIntensity=on&&!uv?1.5:0.05;lD.material.emissiveIntensity=on&&uv?1.5:0.05;
+ dR.material.emissiveIntensity=on?1.4:0;dS.material.emissiveIntensity=on?0.2+1.2*T:0;
+ renderer.render(scene,cam)}
+setMode('ext');resize();loop();refresh();
+</script>
+</body>
+</html>
